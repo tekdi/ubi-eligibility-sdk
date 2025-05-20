@@ -1,6 +1,6 @@
-const Ajv = require('ajv');
+const Ajv = require("ajv");
 const ajv = new Ajv();
-require('ajv-formats')(ajv);
+require("ajv-formats")(ajv);
 
 class EligibilityService {
   constructor() {
@@ -10,12 +10,12 @@ class EligibilityService {
 
   initializeSchemaValidator() {
     const benefitSchema = {
-      type: 'object',
-      required: ['en'],
+      type: "object",
+      required: ["en"],
       properties: {
         en: {
-          type: 'object',
-          required: [ 'eligibility'],
+          type: "object",
+          required: ["eligibility"],
           properties: {
             // basicDetails: {
             //   type: 'object',
@@ -51,44 +51,61 @@ class EligibilityService {
             //   }
             // },
             eligibility: {
-              type: 'array',
+              type: "array",
               items: {
-                type: 'object',
-                required: ['type', 'description', 'criteria'],
+                type: "object",
+                required: ["type", "description", "criteria"],
                 properties: {
-                  type: { type: 'string', enum: ['personal', 'educational', 'economical', 'geographical'] },
-                  description: { type: 'string' },
+                  type: {
+                    type: "string",
+                    enum: [
+                      "personal",
+                      "educational",
+                      "economical",
+                      "geographical",
+                    ],
+                  },
+                  description: { type: "string" },
                   criteria: {
-                    type: 'object',
-                    required: ['name', 'condition', 'conditionValues'],
+                    type: "object",
+                    required: ["name", "condition", "conditionValues"],
                     properties: {
-                      name: { type: 'string' },
-                      condition: { type: 'string', enum: ['equals', 'in', 'greater than equals', 'less than equals'] },
-                      conditionValues: { 
+                      name: { type: "string" },
+                      condition: {
+                        type: "string",
+                        enum: [
+                          "equals",
+                          "in",
+                          "greater than equals",
+                          "less than equals",
+                        ],
+                      },
+                      conditionValues: {
                         oneOf: [
-                          { 
-                            type: 'string',
-                            description: 'Single string or numeric value for comparison'
+                          {
+                            type: "string",
+                            description:
+                              "Single string or numeric value for comparison",
                           },
-                          { 
-                            type: 'array',
-                            items: { 
-                              type: 'string'
+                          {
+                            type: "array",
+                            items: {
+                              type: "string",
                             },
                             minItems: 1,
-                            description: 'Array of values for list comparison'
-                          }
+                            description: "Array of values for list comparison",
+                          },
                         ],
-                        description: 'Value(s) to compare against'
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
+                        description: "Value(s) to compare against",
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
     };
 
     this.schemaValidator = ajv.compile(benefitSchema);
@@ -99,7 +116,7 @@ class EligibilityService {
     if (!isValid) {
       return {
         isValid: false,
-        errors: this.schemaValidator.errors
+        errors: this.schemaValidator.errors,
       };
     }
     return { isValid: true };
@@ -116,7 +133,7 @@ class EligibilityService {
     const results = {
       eligible: [],
       ineligible: [],
-      errors: []
+      errors: [],
     };
 
     for (const schema of benefitSchemas) {
@@ -125,9 +142,9 @@ class EligibilityService {
         const validationResult = this.validateBenefitSchema(schema);
         if (!validationResult.isValid) {
           results.errors.push({
-            schemaId: schema.id || 'Unknown',
-            error: 'Invalid schema structure',
-            details: validationResult.errors
+            schemaId: schema.id || "Unknown",
+            error: "Invalid schema structure",
+            details: validationResult.errors,
           });
           continue;
         }
@@ -141,7 +158,7 @@ class EligibilityService {
         const eligibilityResult = await this.checkSchemaEligibility(
           userProfile,
           enSchema,
-          customRules
+          customRules,
         );
 
         if (eligibilityResult.isEligible) {
@@ -149,11 +166,11 @@ class EligibilityService {
             schemaId: schema.id,
             // details: {
             //   title: enSchema.basicDetails.title,
-              // category: enSchema.basicDetails.category,
-              // subCategory: enSchema.basicDetails.subCategory,
-              // tags: enSchema.basicDetails.tags || [],
-              // applicationOpenDate: enSchema.basicDetails.applicationOpenDate,
-              // applicationCloseDate: enSchema.basicDetails.applicationCloseDate
+            // category: enSchema.basicDetails.category,
+            // subCategory: enSchema.basicDetails.subCategory,
+            // tags: enSchema.basicDetails.tags || [],
+            // applicationOpenDate: enSchema.basicDetails.applicationOpenDate,
+            // applicationCloseDate: enSchema.basicDetails.applicationCloseDate
             // },
             // benefits: {
             //   shortDescription: enSchema.benefitContent.shortDescription || '',
@@ -166,20 +183,20 @@ class EligibilityService {
           results.ineligible.push({
             schemaId: schema.id,
             // details: {
-              // title: enSchema.basicDetails.title,
-              // category: enSchema.basicDetails.category,
-              // subCategory: enSchema.basicDetails.subCategory,
-              // tags: enSchema.basicDetails.tags || [],
-              // applicationOpenDate: enSchema.basicDetails.applicationOpenDate,
-              // applicationCloseDate: enSchema.basicDetails.applicationCloseDate
+            // title: enSchema.basicDetails.title,
+            // category: enSchema.basicDetails.category,
+            // subCategory: enSchema.basicDetails.subCategory,
+            // tags: enSchema.basicDetails.tags || [],
+            // applicationOpenDate: enSchema.basicDetails.applicationOpenDate,
+            // applicationCloseDate: enSchema.basicDetails.applicationCloseDate
             // },
-            reasons: eligibilityResult.reasons
+            reasons: eligibilityResult.reasons,
           });
         }
       } catch (error) {
         results.errors.push({
-          schemaId: schema.id || 'Unknown',
-          error: error.message
+          schemaId: schema.id || "Unknown",
+          error: error.message,
         });
       }
     }
@@ -196,35 +213,35 @@ class EligibilityService {
   async checkDocumentValidity(userProfile, schema) {
     // Get document requirements from the scheme
     const documentRequirements = schema.documents || [];
-    
+
     // If no document requirements, return true
     if (documentRequirements.length === 0) {
       return {
         isValid: true,
-        reason: null
+        reason: null,
       };
     }
 
     // Check each required document
     for (const requirement of documentRequirements) {
       const { documentType, isRequired, allowedProofs } = requirement;
-      
+
       if (isRequired) {
         // Check if user has provided the required document
         if (!userProfile.documents || !userProfile.documents[documentType]) {
           return {
             isValid: false,
-            reason: `Missing required document: ${documentType}`
+            reason: `Missing required document: ${documentType}`,
           };
         }
 
         const userDocument = userProfile.documents[documentType];
-        
+
         // Check if the document type is allowed
         if (!allowedProofs.includes(userDocument.type)) {
           return {
             isValid: false,
-            reason: `Invalid document type for ${documentType}. Allowed types: ${allowedProofs.join(', ')}`
+            reason: `Invalid document type for ${documentType}. Allowed types: ${allowedProofs.join(", ")}`,
           };
         }
 
@@ -233,7 +250,7 @@ class EligibilityService {
         if (!isValid) {
           return {
             isValid: false,
-            reason: `Invalid document: ${documentType}`
+            reason: `Invalid document: ${documentType}`,
           };
         }
       }
@@ -241,7 +258,7 @@ class EligibilityService {
 
     return {
       isValid: true,
-      reason: null
+      reason: null,
     };
   }
 
@@ -256,7 +273,7 @@ class EligibilityService {
       // For now, we'll just check if the document is verified
       return document.verified === true;
     } catch (error) {
-      console.error('Error validating document:', error);
+      console.error("Error validating document:", error);
       return false;
     }
   }
@@ -272,7 +289,7 @@ class EligibilityService {
     if (!schema.eligibility || !Array.isArray(schema.eligibility)) {
       return {
         isEligible: false,
-        reasons: ['No eligibility criteria defined in schema']
+        reasons: ["No eligibility criteria defined in schema"],
       };
     }
 
@@ -315,28 +332,35 @@ class EligibilityService {
             type: type,
             field: name,
             reason: `Missing required field: ${name}`,
-            description: description
+            description: description,
           });
           continue;
         }
 
         // Check document requirements if specified
         if (criterion.allowedProofs) {
-          const hasValidDocument = await this.checkDocumentValidity(userProfile, criterion);
+          const hasValidDocument = await this.checkDocumentValidity(
+            userProfile,
+            criterion,
+          );
           if (!hasValidDocument) {
             reasons.push({
               type: type,
               field: name,
               reason: `Missing or invalid document for: ${description}`,
               description: description,
-              requiredDocuments: criterion.allowedProofs
+              requiredDocuments: criterion.allowedProofs,
             });
             continue;
           }
         }
 
         // Apply the condition check
-        const isEligible = await this.checkCriterion(userValue, condition, conditionValues);
+        const isEligible = await this.checkCriterion(
+          userValue,
+          condition,
+          conditionValues,
+        );
         if (!isEligible) {
           reasons.push({
             type: type,
@@ -345,7 +369,7 @@ class EligibilityService {
             description: description,
             userValue: userValue,
             requiredValue: conditionValues,
-            condition: condition
+            condition: condition,
           });
         }
       }
@@ -353,7 +377,7 @@ class EligibilityService {
 
     return {
       isEligible: reasons.length === 0,
-      reasons: reasons.length > 0 ? reasons : null
+      reasons: reasons.length > 0 ? reasons : null,
     };
   }
 
@@ -367,54 +391,62 @@ class EligibilityService {
   async checkCriterion(userValue, condition, conditionValues) {
     // Handle undefined or null condition
     if (!condition) {
-      console.error('Invalid condition:', { condition, conditionValues });
-      throw new Error('Condition is required for eligibility check');
+      console.error("Invalid condition:", { condition, conditionValues });
+      throw new Error("Condition is required for eligibility check");
     }
 
     // Extract condition string from object if needed
     let conditionStr;
-    if (typeof condition === 'object') {
+    if (typeof condition === "object") {
       if (condition.condition) {
         conditionStr = condition.condition;
       } else if (condition.criteria && condition.criteria.condition) {
         conditionStr = condition.criteria.condition;
       } else {
-        console.error('Invalid condition object:', condition);
-        throw new Error('Invalid condition object structure');
+        console.error("Invalid condition object:", condition);
+        throw new Error("Invalid condition object structure");
       }
     } else {
       conditionStr = condition;
     }
 
     // Validate condition string
-    if (typeof conditionStr !== 'string') {
-      console.error('Invalid condition type:', { conditionStr, type: typeof conditionStr });
-      throw new Error('Condition must be a string');
+    if (typeof conditionStr !== "string") {
+      console.error("Invalid condition type:", {
+        conditionStr,
+        type: typeof conditionStr,
+      });
+      throw new Error("Condition must be a string");
     }
 
     // Normalize condition string
     conditionStr = conditionStr.toLowerCase().trim();
-    
+
     switch (conditionStr) {
-      case 'equals':
+      case "equals":
         return userValue === conditionValues;
-      case 'in':
-        return Array.isArray(conditionValues) && conditionValues.includes(userValue);
-      case 'greater than equals':
-      case 'greater_than_equals':
+      case "in":
+        return (
+          Array.isArray(conditionValues) && conditionValues.includes(userValue)
+        );
+      case "greater than equals":
+      case "greater_than_equals":
         return Number(userValue) >= Number(conditionValues);
-      case 'less than equals':
-      case 'less_than_equals':
+      case "less than equals":
+      case "less_than_equals":
         return Number(userValue) <= Number(conditionValues);
-      case 'between':
+      case "between":
         if (!Array.isArray(conditionValues) || conditionValues.length !== 2) {
-          throw new Error('Between condition requires an array of two values');
+          throw new Error("Between condition requires an array of two values");
         }
         const [min, max] = conditionValues.map(Number);
         const value = Number(userValue);
         return value >= min && value <= max;
       default:
-        console.error('Unsupported condition:', { conditionStr, conditionValues });
+        console.error("Unsupported condition:", {
+          conditionStr,
+          conditionValues,
+        });
         throw new Error(`Unsupported condition: ${conditionStr}`);
     }
   }
@@ -427,28 +459,28 @@ class EligibilityService {
    */
   applyCustomRule(userValue, rule) {
     if (!rule.condition || !rule.value) {
-      throw new Error('Custom rule must have condition and value properties');
+      throw new Error("Custom rule must have condition and value properties");
     }
 
     const value = Number(userValue);
     const ruleValue = Number(rule.value);
 
     switch (rule.condition) {
-      case 'equals':
+      case "equals":
         return value === ruleValue;
-      case 'not equals':
+      case "not equals":
         return value !== ruleValue;
-      case 'greater than':
+      case "greater than":
         return value > ruleValue;
-      case 'less than':
+      case "less than":
         return value < ruleValue;
-      case 'greater than equals':
+      case "greater than equals":
         return value >= ruleValue;
-      case 'less than equals':
+      case "less than equals":
         return value <= ruleValue;
-      case 'in':
+      case "in":
         return Array.isArray(rule.value) && rule.value.includes(userValue);
-      case 'not in':
+      case "not in":
         return Array.isArray(rule.value) && !rule.value.includes(userValue);
       default:
         throw new Error(`Unsupported custom condition: ${rule.condition}`);
@@ -492,7 +524,10 @@ class EligibilityService {
 
         // Check document requirements if specified
         if (criterion.allowedProofs) {
-          const hasValidDocument = await this.checkDocumentValidity(userProfile, criterion);
+          const hasValidDocument = await this.checkDocumentValidity(
+            userProfile,
+            criterion,
+          );
           if (!hasValidDocument) {
             reasons.push(`Missing or invalid document for: ${description}`);
             continue;
@@ -500,16 +535,26 @@ class EligibilityService {
         }
 
         // Apply the condition check
-        const isEligible = await this.checkCriterion(userValue, condition, conditionValues);
+        const isEligible = await this.checkCriterion(
+          userValue,
+          condition,
+          conditionValues,
+        );
         if (!isEligible) {
           let reason = `Does not meet ${type} criteria: ${description}`;
-          if (condition === 'in') {
-            reason += ` (Required: ${conditionValues.join(', ')}, Got: ${userValue})`;
-          } else if (condition === 'less than equals' || condition === 'less_than_equals') {
+          if (condition === "in") {
+            reason += ` (Required: ${conditionValues.join(", ")}, Got: ${userValue})`;
+          } else if (
+            condition === "less than equals" ||
+            condition === "less_than_equals"
+          ) {
             reason += ` (Required: <= ${conditionValues}, Got: ${userValue})`;
-          } else if (condition === 'greater than equals' || condition === 'greater_than_equals') {
+          } else if (
+            condition === "greater than equals" ||
+            condition === "greater_than_equals"
+          ) {
             reason += ` (Required: >= ${conditionValues}, Got: ${userValue})`;
-          } else if (condition === 'equals') {
+          } else if (condition === "equals") {
             reason += ` (Required: ${conditionValues}, Got: ${userValue})`;
           }
           reasons.push(reason);
@@ -563,32 +608,34 @@ class EligibilityService {
   async checkUsersEligibility(userProfiles, scheme) {
     const results = {
       eligibleUsers: [],
-      ineligibleUsers: []
+      ineligibleUsers: [],
     };
 
     for (const userProfile of userProfiles) {
-      const eligibilityResult = await this.checkUserEligibility(userProfile, scheme);
-     
+      const eligibilityResult = await this.checkUserEligibility(
+        userProfile,
+        scheme,
+      );
+
       if (eligibilityResult.isEligible) {
         results.eligibleUsers.push({
           ...userProfile,
-          eligibleSchemes: [eligibilityResult.schemeDetails]
+          eligibleSchemes: [eligibilityResult.schemeDetails],
         });
       } else {
-       
         // Convert reasons to simple strings
-        const reasonStrings = eligibilityResult.reasons.map(reason => {
-          if (typeof reason === 'string') {
+        const reasonStrings = eligibilityResult.reasons.map((reason) => {
+          if (typeof reason === "string") {
             return reason;
-          } else if (typeof reason === 'object') {
+          } else if (typeof reason === "object") {
             return `${reason.type}: ${reason.reason} (${reason.description})`;
           }
-          return 'Not eligible';
+          return "Not eligible";
         });
 
         results.ineligibleUsers.push({
           ...userProfile,
-          reasons: reasonStrings
+          reasons: reasonStrings,
         });
       }
     }
@@ -597,4 +644,4 @@ class EligibilityService {
   }
 }
 
-module.exports = new EligibilityService(); 
+module.exports = new EligibilityService();

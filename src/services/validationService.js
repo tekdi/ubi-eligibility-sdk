@@ -1,6 +1,6 @@
-const Ajv = require('ajv');
+const Ajv = require("ajv");
 const ajv = new Ajv();
-require('ajv-formats')(ajv);
+require("ajv-formats")(ajv);
 
 class ValidationService {
   constructor() {
@@ -14,13 +14,13 @@ class ValidationService {
    * @returns {Object} Validation result
    */
   validateUserProfile(userProfile, schema) {
-    const validator = this.getValidator('userProfile', schema);
+    const validator = this.getValidator("userProfile", schema);
     const valid = validator(userProfile);
 
     if (!valid) {
       return {
         isValid: false,
-        errors: validator.errors
+        errors: validator.errors,
       };
     }
 
@@ -33,13 +33,16 @@ class ValidationService {
    * @returns {Object} Validation result
    */
   validateBenefitSchema(schema) {
-    const validator = this.getValidator('benefitSchema', this.getBenefitSchemaSchema());
+    const validator = this.getValidator(
+      "benefitSchema",
+      this.getBenefitSchemaSchema(),
+    );
     const valid = validator(schema);
 
     if (!valid) {
       return {
         isValid: false,
-        errors: validator.errors
+        errors: validator.errors,
       };
     }
 
@@ -66,61 +69,59 @@ class ValidationService {
    */
   getBenefitSchemaSchema() {
     return {
-      type: 'object',
-      required: ['en'],
+      type: "object",
+      required: ["en"],
       properties: {
         en: {
-          type: 'object',
-          required: [ 'eligibility'],
+          type: "object",
+          required: ["eligibility"],
           properties: {
             eligibility: {
-              type: 'array',
+              type: "array",
               items: {
-                type: 'object',
-                required: ['type', 'description', 'criteria'],
+                type: "object",
+                required: ["type", "description", "criteria"],
                 properties: {
-                  type: { type: 'string' },
-                  description: { type: 'string' },
+                  type: { type: "string" },
+                  description: { type: "string" },
                   criteria: {
-                    type: 'object',
-                    required: ['name', 'condition', 'conditionValues'],
+                    type: "object",
+                    required: ["name", "condition", "conditionValues"],
                     properties: {
-                      name: { type: 'string' },
-                      condition: { type: 'string' },
-                      conditionValues: { 
+                      name: { type: "string" },
+                      condition: { type: "string" },
+                      conditionValues: {
                         anyOf: [
-                          { 
-                            type: 'string',
-                            description: 'Single string or numeric value for comparison'
+                          {
+                            type: "string",
+                            description:
+                              "Single string or numeric value for comparison",
                           },
-                          { 
-                            type: 'number',
-                            description: 'Single numeric value for comparison'
+                          {
+                            type: "number",
+                            description: "Single numeric value for comparison",
                           },
-                          { 
-                            type: 'array',
-                            items: { 
-                              anyOf: [
-                                { type: 'string' },
-                                { type: 'number' }
-                              ]
+                          {
+                            type: "array",
+                            items: {
+                              anyOf: [{ type: "string" }, { type: "number" }],
                             },
                             minItems: 1,
-                            description: 'Array of values for list comparison'
-                          }
+                            description: "Array of values for list comparison",
+                          },
                         ],
-                        description: 'Value(s) to compare against'
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
+                        description: "Value(s) to compare against",
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
     };
   }
 }
 
-module.exports = new ValidationService(); 
+module.exports = new ValidationService();
