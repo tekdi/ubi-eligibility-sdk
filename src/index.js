@@ -81,6 +81,27 @@ fastify.get(
   }
 );
 
+fastify.setErrorHandler((error, request, reply) => {
+  if (error.validation) {
+    // This is a validation error (400)
+    request.log.error(
+      { validation: error.validation },
+      "Schema validation failed"
+    );
+
+    return reply.status(400).send({
+      error: "Bad Request",
+      message: error.message,
+      details: error.validation,
+    });
+  }
+  request.log.error(error);
+  reply.status(error.statusCode || 500).send({
+    error: "Internal Server Error",
+    message: error.message,
+  });
+});
+
 // Main eligibility check endpoint
 fastify.post(
   "/check-eligibility",
@@ -202,6 +223,17 @@ fastify.post(
               type: "string",
               description: "Error message",
             },
+            message: { type: "string", description: "Detailed error message" },
+          },
+        },
+        500: {
+          type: "object",
+          properties: {
+            error: {
+              type: "string",
+              description: "Error message",
+            },
+            message: { type: "string", description: "Detailed error message" },
           },
         },
       },
@@ -210,15 +242,6 @@ fastify.post(
   async (request, reply) => {
     try {
       const { userProfile, benefitSchemas, customRules } = request.body;
-
-      // Validate required fields
-      if (!userProfile) {
-        throw new Error("userProfile is required");
-      }
-      if (!benefitSchemas || !Array.isArray(benefitSchemas)) {
-        throw new Error("benefitSchemas must be an array");
-      }
-
       // Process eligibility
       const results = await eligibilityService.checkEligibility(
         userProfile,
@@ -229,7 +252,7 @@ fastify.post(
       return results;
     } catch (error) {
       fastify.log.error(error);
-      reply.code(400).send({ error: error.message });
+      reply.code(500).send({ error: error.message });
     }
   }
 );
@@ -395,7 +418,21 @@ fastify.post(
         400: {
           type: "object",
           properties: {
-            error: { type: "string", description: "Error message" },
+            error: {
+              type: "string",
+              description: "Error message",
+            },
+            message: { type: "string", description: "Detailed error message" },
+          },
+        },
+        500: {
+          type: "object",
+          properties: {
+            error: {
+              type: "string",
+              description: "Error message",
+            },
+            message: { type: "string", description: "Detailed error message" },
           },
         },
       },
@@ -405,33 +442,33 @@ fastify.post(
     try {
       const { userProfiles, benefitSchema } = request.body;
 
-      if (!userProfiles || !benefitSchema) {
-        throw new Error("User profiles and benefit schema are required");
-      }
+      // if (!userProfiles || !benefitSchema) {
+      //   throw new Error("User profiles and benefit schema are required");
+      // }
 
-      // Validate user profiles
-      for (const profile of userProfiles) {
-        const validation = validationService.validateUserProfile(
-          profile,
-          userProfileSchema
-        );
-        if (!validation.isValid) {
-          return reply.code(400).send({
-            error: "Invalid user profile",
-            details: validation.errors,
-          });
-        }
-      }
+      // // Validate user profiles
+      // for (const profile of userProfiles) {
+      //   const validation = validationService.validateUserProfile(
+      //     profile,
+      //     userProfileSchema
+      //   );
+      //   if (!validation.isValid) {
+      //     return reply.code(400).send({
+      //       error: "Invalid user profile",
+      //       details: validation.errors,
+      //     });
+      //   }
+      // }
 
-      // Validate benefit schema
-      const schemaValidation =
-        validationService.validateBenefitSchema(benefitSchema);
-      if (!schemaValidation.isValid) {
-        return reply.code(400).send({
-          error: "Invalid benefit schema",
-          details: schemaValidation.errors,
-        });
-      }
+      // // Validate benefit schema
+      // const schemaValidation =
+      //   validationService.validateBenefitSchema(benefitSchema);
+      // if (!schemaValidation.isValid) {
+      //   return reply.code(400).send({
+      //     error: "Invalid benefit schema",
+      //     details: schemaValidation.errors,
+      //   });
+      // }
 
       // Check eligibility for each user
       const results = await eligibilityService.checkUsersEligibility(
