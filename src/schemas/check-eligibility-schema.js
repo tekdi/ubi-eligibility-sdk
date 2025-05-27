@@ -36,10 +36,6 @@ const benefitEligibleSchema = {
       benefitSchemas: {
         type: "array",
         items: {
-          // type: "object",
-          // required: ["en"],
-          // properties: {
-            // en: {
               type: "object",
               required: ["eligibility"],
               properties: {
@@ -68,13 +64,14 @@ const benefitEligibleSchema = {
                 },
               // },
             
-          },
+          },     
         },
+       
       },
-      customRules: {
-        type: "object",
+      
+     customRules: {
+        type: "string",
         additionalProperties: true,
-        description: "Custom rules to override standard eligibility checks",
       },
     },
   },

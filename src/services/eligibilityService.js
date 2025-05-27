@@ -1,9 +1,12 @@
 const { checkCriterion, applyCustomRule } = require("../utils/eligibilityUtils");
+const {
+    checkSchemaEligibility,
+    checkDocumentValidity,
+    validateDocument
+  } = require('../utils/benefitSchemaEligibility.js')
+const vm = require("vm");
 class EligibilityService {
-  constructor() {
-    
-  }
-
+  constructor() {}
 
   /**
    * Check eligibility for all provided benefit schemas
@@ -12,7 +15,7 @@ class EligibilityService {
    * @param {Object} customRules - Optional custom rules
    * @returns {Object} Eligibility results
    */
-  async checkEligibility(userProfile, benefitSchemas, customRules = {}) {
+  async checkEligibility(userProfile, benefitSchemas, customRules) {
     const results = {
       eligible: [],
       ineligible: [],
@@ -22,24 +25,56 @@ class EligibilityService {
     for (const schema of benefitSchemas) {
       try {
         const benefitCrateria = schema.eligibility;
-       
+        if (!customRules) {
+          const eligibilityResult = await checkSchemaEligibility(
+            userProfile,
+            benefitCrateria,
+            customRules
+          );
 
-        const eligibilityResult = await this.checkSchemaEligibility(
-          userProfile,
-          benefitCrateria,
-          customRules,
-        );
-
-        if (eligibilityResult.isEligible) {
-          results.eligible.push({
-            schemaId: schema.id,
-          });
-        } else {
-          results.ineligible.push({
-            schemaId: schema.id,
-            reasons: eligibilityResult.reasons,
-          });
+          if (eligibilityResult.isEligible) {
+            results.eligible.push({
+              schemaId: schema.id,
+            });
+          } else {
+            results.ineligible.push({
+              schemaId: schema.id,
+              reasons: eligibilityResult.reasons,
+            });
+          }
+           continue;
         }
+         // Custom rules exist – evaluate each criterion individually by its `id`
+      const evaluationResults = {};
+      const criterionResults = []; // Optional: for reason tracking
+
+      for (const criterion of schema.eligibility) { 
+         const benefitCrateria = criterion;
+        const ruleId = benefitCrateria?.id;
+        if (!ruleId) {
+          throw new Error(`Missing rule id in criterion for schema: ${benefitCrateria.id}`);
+        }
+
+        const result = await checkSchemaEligibility(userProfile, [benefitCrateria], customRules);
+        evaluationResults[ruleId] = result.isEligible;
+console.log(evaluationResults,'==',criterionResults)
+        criterionResults.push({
+          ruleId,
+          passed: result.isEligible,
+          description: criterion.description,
+          reasons: result.reasons,
+        });
+      }
+      const expression = customRules;
+      const isEligible = vm.runInNewContext(expression, evaluationResults);
+      if (isEligible) {
+        results.eligible.push({ schemaId: schema.id });
+      } else {
+        results.ineligible.push({
+          schemaId: schema.id,
+          reasons: criterionResults.filter((r) => !r.passed), // Optional
+        });
+      }
       } catch (error) {
         results.errors.push({
           schemaId: schema.id || "Unknown",
@@ -51,184 +86,6 @@ class EligibilityService {
     return results;
   }
 
-  /**
-   * Check document validity using VC checker
-   * @param {Object} userProfile - User profile data
-   * @param {Object} schema - Benefit schema
-   * @returns {Object} Whether documents are valid
-   */
-  async checkDocumentValidity(userProfile, schema) {
-    // Get document requirements from the scheme
-    const documentRequirements = schema.documents || [];
-
-    // If no document requirements, return true
-    if (documentRequirements.length === 0) {
-      return {
-        isValid: true,
-        reason: null,
-      };
-    }
-
-    // Check each required document
-    for (const requirement of documentRequirements) {
-      const { documentType, isRequired, allowedProofs } = requirement;
-
-      if (isRequired) {
-        // Check if user has provided the required document
-        if (!userProfile.documents || !userProfile.documents[documentType]) {
-          return {
-            isValid: false,
-            reason: `Missing required document: ${documentType}`,
-          };
-        }
-
-        const userDocument = userProfile.documents[documentType];
-
-        // Check if the document type is allowed
-        if (!allowedProofs.includes(userDocument.type)) {
-          return {
-            isValid: false,
-            reason: `Invalid document type for ${documentType}. Allowed types: ${allowedProofs.join(", ")}`,
-          };
-        }
-
-        // Validate document using VC checker
-        const isValid = await this.validateDocument(userDocument);
-        if (!isValid) {
-          return {
-            isValid: false,
-            reason: `Invalid document: ${documentType}`,
-          };
-        }
-      }
-    }
-
-    return {
-      isValid: true,
-      reason: null,
-    };
-  }
-
-  /**
-   * Validate a document using VC checker
-   * @param {Object} document - Document to validate
-   * @returns {Boolean} Whether document is valid
-   */
-  async validateDocument(document) {
-    try {
-      // TODO: Implement actual VC checker integration
-      // For now, we'll just check if the document is verified
-      return document.verified === true;
-    } catch (error) {
-      console.error("Error validating document:", error);
-      return false;
-    }
-  }
-
-  /**
-   * Check eligibility for a single benefit schema
-   * @param {Object} userProfile - User profile data
-   * @param {Object} schema - Benefit schema
-   * @param {Object} customRules - Custom rules
-   * @returns {Object} Whether user is eligible and reasons for ineligibility
-   */
-async checkSchemaEligibility(userProfile, schema, customRules) { // checkBenefit
-  if (!schema || !Array.isArray(schema)) {
-    return {
-      isEligible: false,
-      reasons: ["No eligibility criteria defined in schema"],
-    };
-  }
-
-  const reasons = [];
-
-  // Only check other criteria if within application period
-  if (reasons.length === 0) {
-    // Check each eligibility criterion
-    for (const criterion of schema) {
-      
-      const { type, description, criteria } = criterion;
-      const { name, condition, conditionValues, documentKey, strictChecking } = criteria;
-
-      let userValue;
-      if (type === "userProfile") {
-        userValue = userProfile[name];
-        if (!userValue && strictChecking === true) {
-          reasons.push({
-            type,
-            field: name,
-            reason: `Missing required userProfile field: ${name}`,
-            description,
-          });
-          continue;
-        }
-        // Apply the condition check
-      } else {
-        // For non-personal types, check document exists and valid
-        const doc = userProfile.documents?.[documentKey];
-        if (!doc && strictChecking === true) {
-          reasons.push({
-            type,
-            field: documentKey,
-            reason: `Missing required document: ${documentKey}`,
-            description,
-          });
-          continue;
-        }
-        userValue = doc?.vc?.[name];
-        if (!userValue && strictChecking === true) {
-          reasons.push({
-            type,
-            field: name,
-            reason: `Missing required field in vc: ${name}`,
-            description,
-          });
-          continue;
-        }
-      }
-
-      const isEligible = await checkCriterion(
-        userValue,
-        condition,
-        conditionValues,
-      );
-      if (!isEligible && strictChecking === true) {
-        reasons.push({
-          type: type,
-          field: name,
-          reason: `Does not meet ${type} criteria: ${description}`,
-          description: description,
-          userValue: userValue,
-          requiredValue: conditionValues,
-          condition: condition,
-        });
-      }
-
-      // Check document requirements if specified
-      if (criterion.allowedProofs) {
-        const hasValidDocument = await this.checkDocumentValidity(
-          userProfile,
-          criterion,
-        );
-        if (!hasValidDocument ) {
-          reasons.push({
-            type: type,
-            field: name,
-            reason: `Missing or invalid document for: ${description}`,
-            description: description,
-            requiredDocuments: criterion.allowedProofs,
-          });
-          continue;
-        }
-      }
-    }
-  }
-
-  return {
-    isEligible: reasons.length === 0,
-    reasons: reasons.length > 0 ? reasons : null,
-  };
-}
 
   /**
    * Check if a user is eligible for a specific benefit scheme
@@ -255,9 +112,9 @@ async checkSchemaEligibility(userProfile, schema, customRules) { // checkBenefit
 
         // Check document requirements if specified
         if (criterion.allowedProofs) {
-          const hasValidDocument = await this.checkDocumentValidity(
+          const hasValidDocument = await checkDocumentValidity(
             userProfile,
-            criterion,
+            criterion
           );
           if (!hasValidDocument) {
             reasons.push(`Missing or invalid document for: ${description}`);
@@ -269,57 +126,26 @@ async checkSchemaEligibility(userProfile, schema, customRules) { // checkBenefit
         const isEligible = await checkCriterion(
           userValue,
           condition,
-          conditionValues,
+          conditionValues
         );
-        if (!isEligible) {
-          let reason = `Does not meet ${type} criteria: ${description}`;
-          if (condition === "in") {
-            reason += ` (Required: ${conditionValues.join(", ")}, Got: ${userValue})`;
-          } else if (
-            condition === "less than equals" ||
-            condition === "less_than_equals"
-          ) {
-            reason += ` (Required: <= ${conditionValues}, Got: ${userValue})`;
-          } else if (
-            condition === "greater than equals" ||
-            condition === "greater_than_equals"
-          ) {
-            reason += ` (Required: >= ${conditionValues}, Got: ${userValue})`;
-          } else if (condition === "equals") {
-            reason += ` (Required: ${conditionValues}, Got: ${userValue})`;
-          }
-          reasons.push(reason);
+         if (!isEligible) {
+          reasons.push({
+            type: type,
+            field: name,
+            reason: `Does not meet ${type} criteria: ${description}`,
+            description: description,
+            userValue: userValue,
+            requiredValue: conditionValues,
+            condition: condition,
+          });
         }
       }
     }
 
     return {
       isEligible: reasons.length === 0,
-      reasons: reasons
+      reasons: reasons,
     };
-  }
-
-  /**
-   * Check document validity for a criterion
-   * @param {Object} userProfile - User profile data
-   * @param {Object} criterion - Eligibility criterion
-   * @returns {boolean} Whether document is valid
-   */
-  async checkDocumentValidity(userProfile, criterion) {
-    const { allowedProofs } = criterion;
-    if (!allowedProofs || allowedProofs.length === 0) {
-      return true;
-    }
-
-    const userDocuments = userProfile.documents || {};
-    for (const proofType of allowedProofs) {
-      const document = userDocuments[proofType];
-      if (document && document.verified) {
-        return true;
-      }
-    }
-
-    return false;
   }
 
   /**
@@ -337,7 +163,7 @@ async checkSchemaEligibility(userProfile, schema, customRules) { // checkBenefit
     for (const userProfile of userProfiles) {
       const eligibilityResult = await this.checkUserEligibility(
         userProfile,
-        scheme,
+        scheme
       );
 
       if (eligibilityResult.isEligible) {
