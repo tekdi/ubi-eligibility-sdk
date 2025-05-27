@@ -36,10 +36,10 @@ const benefitEligibleSchema = {
       benefitSchemas: {
         type: "array",
         items: {
-          type: "object",
-          required: ["en"],
-          properties: {
-            en: {
+          // type: "object",
+          // required: ["en"],
+          // properties: {
+            // en: {
               type: "object",
               required: ["eligibility"],
               properties: {
@@ -56,6 +56,7 @@ const benefitEligibleSchema = {
                         required: ["name", "condition", "conditionValues"],
                         properties: {
                           name: { type: "string" },
+                          
                           condition: { type: "string" },
                           conditionValues: {
                             type: ["string", "number", "array"],
@@ -65,8 +66,8 @@ const benefitEligibleSchema = {
                     },
                   },
                 },
-              },
-            },
+              // },
+            
           },
         },
       },

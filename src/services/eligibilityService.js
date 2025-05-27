@@ -1,126 +1,9 @@
-const Ajv = require("ajv");
-const ajv = new Ajv();
-require("ajv-formats")(ajv);
-
+const { checkCriterion, applyCustomRule } = require("../utils/eligibilityUtils");
 class EligibilityService {
   constructor() {
-    this.validators = new Map();
-    this.initializeSchemaValidator();
+    
   }
 
-  initializeSchemaValidator() {
-    const benefitSchema = {
-      type: "object",
-      required: ["en"],
-      properties: {
-        en: {
-          type: "object",
-          required: ["eligibility"],
-          properties: {
-            // basicDetails: {
-            //   type: 'object',
-            //   required: ['title', 'category', 'subCategory', 'tags', 'applicationOpenDate', 'applicationCloseDate'],
-            //   properties: {
-            //     title: { type: 'string' },
-            //     category: { type: 'string' },
-            //     subCategory: { type: 'string' },
-            //     tags: { type: 'array', items: { type: 'string' } },
-            //     applicationOpenDate: { type: 'string', format: 'date' },
-            //     applicationCloseDate: { type: 'string', format: 'date' }
-            //   }
-            // },
-            // benefitContent: {
-            //   type: 'object',
-            //   required: ['shortDescription', 'longDescription', 'benefits'],
-            //   properties: {
-            //     shortDescription: { type: 'string' },
-            //     longDescription: { type: 'string' },
-            //     benefits: {
-            //       type: 'array',
-            //       items: {
-            //         type: 'object',
-            //         required: ['type', 'title', 'description'],
-            //         properties: {
-            //           type: { type: 'string', enum: ['financial', 'non-monetary'] },
-            //           title: { type: 'string' },
-            //           description: { type: 'string' }
-            //         }
-            //       }
-            //     },
-            //     amount: { type: 'number' }
-            //   }
-            // },
-            eligibility: {
-              type: "array",
-              items: {
-                type: "object",
-                required: ["type", "description", "criteria"],
-                properties: {
-                  type: {
-                    type: "string",
-                    enum: [
-                      "personal",
-                      "educational",
-                      "economical",
-                      "geographical",
-                    ],
-                  },
-                  description: { type: "string" },
-                  criteria: {
-                    type: "object",
-                    required: ["name", "condition", "conditionValues"],
-                    properties: {
-                      name: { type: "string" },
-                      condition: {
-                        type: "string",
-                        enum: [
-                          "equals",
-                          "in",
-                          "greater than equals",
-                          "less than equals",
-                        ],
-                      },
-                      conditionValues: {
-                        oneOf: [
-                          {
-                            type: "string",
-                            description:
-                              "Single string or numeric value for comparison",
-                          },
-                          {
-                            type: "array",
-                            items: {
-                              type: "string",
-                            },
-                            minItems: 1,
-                            description: "Array of values for list comparison",
-                          },
-                        ],
-                        description: "Value(s) to compare against",
-                      },
-                    },
-                  },
-                },
-              },
-            },
-          },
-        },
-      },
-    };
-
-    this.schemaValidator = ajv.compile(benefitSchema);
-  }
-
-  validateBenefitSchema(schema) {
-    const isValid = this.schemaValidator(schema);
-    if (!isValid) {
-      return {
-        isValid: false,
-        errors: this.schemaValidator.errors,
-      };
-    }
-    return { isValid: true };
-  }
 
   /**
    * Check eligibility for all provided benefit schemas
@@ -138,58 +21,22 @@ class EligibilityService {
 
     for (const schema of benefitSchemas) {
       try {
-        // Validate schema structure
-        const validationResult = this.validateBenefitSchema(schema);
-        if (!validationResult.isValid) {
-          results.errors.push({
-            schemaId: schema.id || "Unknown",
-            error: "Invalid schema structure",
-            details: validationResult.errors,
-          });
-          continue;
-        }
-
-        // Get the English version of the schema
-        const enSchema = schema.en;
-        if (!enSchema) {
-          throw new Error('Schema must contain an "en" property');
-        }
+        const benefitCrateria = schema.eligibility;
+       
 
         const eligibilityResult = await this.checkSchemaEligibility(
           userProfile,
-          enSchema,
+          benefitCrateria,
           customRules,
         );
 
         if (eligibilityResult.isEligible) {
           results.eligible.push({
             schemaId: schema.id,
-            // details: {
-            //   title: enSchema.basicDetails.title,
-            // category: enSchema.basicDetails.category,
-            // subCategory: enSchema.basicDetails.subCategory,
-            // tags: enSchema.basicDetails.tags || [],
-            // applicationOpenDate: enSchema.basicDetails.applicationOpenDate,
-            // applicationCloseDate: enSchema.basicDetails.applicationCloseDate
-            // },
-            // benefits: {
-            //   shortDescription: enSchema.benefitContent.shortDescription || '',
-            //   longDescription: enSchema.benefitContent.longDescription || '',
-            //   benefits: enSchema.benefitContent.benefits || [],
-            //   amount: enSchema.benefitContent.amount || 0
-            // }
           });
         } else {
           results.ineligible.push({
             schemaId: schema.id,
-            // details: {
-            // title: enSchema.basicDetails.title,
-            // category: enSchema.basicDetails.category,
-            // subCategory: enSchema.basicDetails.subCategory,
-            // tags: enSchema.basicDetails.tags || [],
-            // applicationOpenDate: enSchema.basicDetails.applicationOpenDate,
-            // applicationCloseDate: enSchema.basicDetails.applicationCloseDate
-            // },
             reasons: eligibilityResult.reasons,
           });
         }
@@ -285,207 +132,103 @@ class EligibilityService {
    * @param {Object} customRules - Custom rules
    * @returns {Object} Whether user is eligible and reasons for ineligibility
    */
-  async checkSchemaEligibility(userProfile, schema, customRules) {
-    if (!schema.eligibility || !Array.isArray(schema.eligibility)) {
-      return {
-        isEligible: false,
-        reasons: ["No eligibility criteria defined in schema"],
-      };
-    }
-
-    const reasons = [];
-
-    // Check application dates first
-    // const currentDate = new Date();
-    // const openDate = new Date(schema.basicDetails.applicationOpenDate);
-    // const closeDate = new Date(schema.basicDetails.applicationCloseDate);
-
-    // if (currentDate < openDate) {
-    //   reasons.push({
-    //     type: "application",
-    //     field: "applicationOpenDate",
-    //     reason: "Application period not started",
-    //     description: `Application opens on: ${schema.basicDetails.applicationOpenDate}`,
-    //     currentDate: currentDate.toISOString().split('T')[0]
-    //   });
-    // } else if (currentDate > closeDate) {
-    //   reasons.push({
-    //     type: "application",
-    //     field: "applicationCloseDate",
-    //     reason: "Application period closed",
-    //     description: `Application closed on: ${schema.basicDetails.applicationCloseDate}`,
-    //     currentDate: currentDate.toISOString().split('T')[0]
-    //   });
-    // }
-
-    // Only check other criteria if within application period
-    if (reasons.length === 0) {
-      // Check each eligibility criterion
-      for (const criterion of schema.eligibility) {
-        const { type, description, criteria } = criterion;
-        const { name, condition, conditionValues } = criteria;
-
-        // Get user value for the criterion
-        const userValue = userProfile[name];
-        if (userValue === undefined) {
-          reasons.push({
-            type: type,
-            field: name,
-            reason: `Missing required field: ${name}`,
-            description: description,
-          });
-          continue;
-        }
-
-        // Check document requirements if specified
-        if (criterion.allowedProofs) {
-          const hasValidDocument = await this.checkDocumentValidity(
-            userProfile,
-            criterion,
-          );
-          if (!hasValidDocument) {
-            reasons.push({
-              type: type,
-              field: name,
-              reason: `Missing or invalid document for: ${description}`,
-              description: description,
-              requiredDocuments: criterion.allowedProofs,
-            });
-            continue;
-          }
-        }
-
-        // Apply the condition check
-        const isEligible = await this.checkCriterion(
-          userValue,
-          condition,
-          conditionValues,
-        );
-        if (!isEligible) {
-          reasons.push({
-            type: type,
-            field: name,
-            reason: `Does not meet ${type} criteria: ${description}`,
-            description: description,
-            userValue: userValue,
-            requiredValue: conditionValues,
-            condition: condition,
-          });
-        }
-      }
-    }
-
+async checkSchemaEligibility(userProfile, schema, customRules) { // checkBenefit
+  if (!schema || !Array.isArray(schema)) {
     return {
-      isEligible: reasons.length === 0,
-      reasons: reasons.length > 0 ? reasons : null,
+      isEligible: false,
+      reasons: ["No eligibility criteria defined in schema"],
     };
   }
 
-  /**
-   * Check a single criterion against user value
-   * @param {*} userValue - User's value for the criterion
-   * @param {string} condition - Condition to check
-   * @param {*} conditionValues - Values to compare against
-   * @returns {boolean} Whether criterion is met
-   */
-  async checkCriterion(userValue, condition, conditionValues) {
-    // Handle undefined or null condition
-    if (!condition) {
-      console.error("Invalid condition:", { condition, conditionValues });
-      throw new Error("Condition is required for eligibility check");
-    }
+  const reasons = [];
 
-    // Extract condition string from object if needed
-    let conditionStr;
-    if (typeof condition === "object") {
-      if (condition.condition) {
-        conditionStr = condition.condition;
-      } else if (condition.criteria && condition.criteria.condition) {
-        conditionStr = condition.criteria.condition;
-      } else {
-        console.error("Invalid condition object:", condition);
-        throw new Error("Invalid condition object structure");
-      }
-    } else {
-      conditionStr = condition;
-    }
+  // Only check other criteria if within application period
+  if (reasons.length === 0) {
+    // Check each eligibility criterion
+    for (const criterion of schema) {
+      
+      const { type, description, criteria } = criterion;
+      const { name, condition, conditionValues, documentKey, strictChecking } = criteria;
 
-    // Validate condition string
-    if (typeof conditionStr !== "string") {
-      console.error("Invalid condition type:", {
-        conditionStr,
-        type: typeof conditionStr,
-      });
-      throw new Error("Condition must be a string");
-    }
-
-    // Normalize condition string
-    conditionStr = conditionStr.toLowerCase().trim();
-
-    switch (conditionStr) {
-      case "equals":
-        return userValue === conditionValues;
-      case "in":
-        return (
-          Array.isArray(conditionValues) && conditionValues.includes(userValue)
-        );
-      case "greater than equals":
-      case "greater_than_equals":
-        return Number(userValue) >= Number(conditionValues);
-      case "less than equals":
-      case "less_than_equals":
-        return Number(userValue) <= Number(conditionValues);
-      case "between":
-        if (!Array.isArray(conditionValues) || conditionValues.length !== 2) {
-          throw new Error("Between condition requires an array of two values");
+      let userValue;
+      if (type === "userProfile") {
+        userValue = userProfile[name];
+        if (!userValue && strictChecking === true) {
+          reasons.push({
+            type,
+            field: name,
+            reason: `Missing required userProfile field: ${name}`,
+            description,
+          });
+          continue;
         }
-        const [min, max] = conditionValues.map(Number);
-        const value = Number(userValue);
-        return value >= min && value <= max;
-      default:
-        console.error("Unsupported condition:", {
-          conditionStr,
-          conditionValues,
+        // Apply the condition check
+      } else {
+        // For non-personal types, check document exists and valid
+        const doc = userProfile.documents?.[documentKey];
+        if (!doc && strictChecking === true) {
+          reasons.push({
+            type,
+            field: documentKey,
+            reason: `Missing required document: ${documentKey}`,
+            description,
+          });
+          continue;
+        }
+        userValue = doc?.vc?.[name];
+        if (!userValue && strictChecking === true) {
+          reasons.push({
+            type,
+            field: name,
+            reason: `Missing required field in vc: ${name}`,
+            description,
+          });
+          continue;
+        }
+      }
+
+      const isEligible = await checkCriterion(
+        userValue,
+        condition,
+        conditionValues,
+      );
+      if (!isEligible && strictChecking === true) {
+        reasons.push({
+          type: type,
+          field: name,
+          reason: `Does not meet ${type} criteria: ${description}`,
+          description: description,
+          userValue: userValue,
+          requiredValue: conditionValues,
+          condition: condition,
         });
-        throw new Error(`Unsupported condition: ${conditionStr}`);
+      }
+
+      // Check document requirements if specified
+      if (criterion.allowedProofs) {
+        const hasValidDocument = await this.checkDocumentValidity(
+          userProfile,
+          criterion,
+        );
+        if (!hasValidDocument ) {
+          reasons.push({
+            type: type,
+            field: name,
+            reason: `Missing or invalid document for: ${description}`,
+            description: description,
+            requiredDocuments: criterion.allowedProofs,
+          });
+          continue;
+        }
+      }
     }
   }
 
-  /**
-   * Apply custom rule to user value
-   * @param {*} userValue - User's value for the criterion
-   * @param {Object} rule - Custom rule object
-   * @returns {Boolean} Whether rule is satisfied
-   */
-  applyCustomRule(userValue, rule) {
-    if (!rule.condition || !rule.value) {
-      throw new Error("Custom rule must have condition and value properties");
-    }
-
-    const value = Number(userValue);
-    const ruleValue = Number(rule.value);
-
-    switch (rule.condition) {
-      case "equals":
-        return value === ruleValue;
-      case "not equals":
-        return value !== ruleValue;
-      case "greater than":
-        return value > ruleValue;
-      case "less than":
-        return value < ruleValue;
-      case "greater than equals":
-        return value >= ruleValue;
-      case "less than equals":
-        return value <= ruleValue;
-      case "in":
-        return Array.isArray(rule.value) && rule.value.includes(userValue);
-      case "not in":
-        return Array.isArray(rule.value) && !rule.value.includes(userValue);
-      default:
-        throw new Error(`Unsupported custom condition: ${rule.condition}`);
-    }
-  }
+  return {
+    isEligible: reasons.length === 0,
+    reasons: reasons.length > 0 ? reasons : null,
+  };
+}
 
   /**
    * Check if a user is eligible for a specific benefit scheme
@@ -497,18 +240,6 @@ class EligibilityService {
     const reasons = [];
     const enSchema = scheme.en;
 
-    // Check application dates first
-    // const currentDate = new Date();
-    // const openDate = new Date(enSchema.basicDetails.applicationOpenDate);
-    // const closeDate = new Date(enSchema.basicDetails.applicationCloseDate);
-
-    // if (currentDate < openDate) {
-    //   reasons.push(`Application period not started. Application opens on: ${enSchema.basicDetails.applicationOpenDate}`);
-    // } else if (currentDate > closeDate) {
-    //   reasons.push(`Application period closed. Application closed on: ${enSchema.basicDetails.applicationCloseDate}`);
-    // }
-
-    // Only check other criteria if within application period
     if (reasons.length === 0) {
       // Check each eligibility criterion
       for (const criterion of enSchema.eligibility) {
@@ -535,7 +266,7 @@ class EligibilityService {
         }
 
         // Apply the condition check
-        const isEligible = await this.checkCriterion(
+        const isEligible = await checkCriterion(
           userValue,
           condition,
           conditionValues,
@@ -564,15 +295,7 @@ class EligibilityService {
 
     return {
       isEligible: reasons.length === 0,
-      reasons: reasons,
-      // schemeDetails: {
-      //   id: scheme.id,
-      //   title: enSchema.basicDetails.title,
-      //   category: enSchema.basicDetails.category,
-      //   subCategory: enSchema.basicDetails.subCategory,
-      //   applicationOpenDate: enSchema.basicDetails.applicationOpenDate,
-      //   applicationCloseDate: enSchema.basicDetails.applicationCloseDate
-      // }
+      reasons: reasons
     };
   }
 
