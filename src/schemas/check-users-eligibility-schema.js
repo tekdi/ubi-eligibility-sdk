@@ -1,29 +1,3 @@
-// Define schemas
-const userProfileSchema = {
-  type: "object",
-  required: ["name", "gender", "age", "dateOfBirth", "caste", "income"],
-  properties: {
-    name: { type: "string", description: "Full name of the user" },
-    gender: {
-      type: "string",
-      description: "Gender of the user",
-      enum: ["male", "female"],
-    },
-    age: { type: "number", description: "Age of the user" },
-    dateOfBirth: {
-      type: "string",
-      format: "date",
-      description: "Date of birth in YYYY-MM-DD format",
-    },
-    caste: {
-      type: "string",
-      description: "Caste category",
-      enum: ["sc", "st", "obc", "general"],
-    },
-    income: { type: "number", description: "Annual income in INR" },
-  },
-};
-
 const benefitSchema = {
   type: "object",
   required: ["en"],
