@@ -3,16 +3,14 @@ const cors = require("@fastify/cors");
 const swagger = require("@fastify/swagger");
 const swaggerUI = require("@fastify/swagger-ui");
 const eligibilityService = require("./services/eligibilityService");
-// const validationService = require("./services/validationService");
 const swaggerConfig = require("./config/swagger");
-const benefitEligibleSchema = require('./schemas/check-eligibility-schema');
-const userEligibilitySchema = require('./schemas/check-users-eligibility-schema')
+const benefitEligibleSchema = require("./schemas/check-eligibility-schema");
+const userEligibilitySchema = require("./schemas/check-users-eligibility-schema");
 // Register plugins
 fastify.register(cors, {
   origin: "*",
   methods: ["GET", "POST", "PUT", "DELETE"],
 });
-
 
 // Register Swagger
 fastify.register(swagger, {
@@ -82,7 +80,7 @@ fastify.setErrorHandler((error, request, reply) => {
 fastify.post(
   "/check-eligibility",
   {
-    schema: benefitEligibleSchema
+    schema: benefitEligibleSchema,
   },
   async (request, reply) => {
     try {
@@ -106,7 +104,7 @@ fastify.post(
 fastify.post(
   "/check-users-eligibility",
   {
-    schema: userEligibilitySchema
+    schema: userEligibilitySchema,
   },
   async (request, reply) => {
     try {

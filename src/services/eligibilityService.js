@@ -1,9 +1,9 @@
 const { checkCriterion } = require("../utils/eligibilityUtils");
 const {
-    checkSchemaEligibility,
-    checkDocumentValidity,
-    validateDocument
-  } = require('../utils/benefitSchemaEligibility.js')
+  checkSchemaEligibility,
+  checkDocumentValidity,
+  validateDocument,
+} = require("../utils/benefitSchemaEligibility.js");
 const vm = require("vm");
 class EligibilityService {
   constructor() {}
@@ -11,20 +11,20 @@ class EligibilityService {
   /**
    * Check eligibility for all provided benefit schemas
    * @param {Object} userProfile - User profile data
-   * @param {Array} benefitSchemas - Array of benefit schemas
+   * @param {Array} benefits - Array of benefit schemas
    * @param {Object} customRules - Optional custom rules
    * @returns {Object} Eligibility results
    */
-  async checkEligibility(userProfile, benefitSchemas, customRules) {
+  async checkEligibility(userProfile, benefits, customRules) {
     const results = {
       eligible: [],
       ineligible: [],
       errors: [],
     };
 
-    for (const schema of benefitSchemas) {
+    for (const benefit of benefits) {
       try {
-        const benefitCrateria = schema.eligibility;
+        const benefitCrateria = benefit.eligibility;
         if (!customRules) {
           const eligibilityResult = await checkSchemaEligibility(
             userProfile,
@@ -34,49 +34,55 @@ class EligibilityService {
 
           if (eligibilityResult.isEligible) {
             results.eligible.push({
-              schemaId: schema.id,
+              schemaId: benefit.id,
             });
           } else {
             results.ineligible.push({
-              schemaId: schema.id,
+              schemaId: benefit.id,
               reasons: eligibilityResult.reasons,
             });
           }
-           continue;
-        }
-      
-      const evaluationResults = {};
-      const criterionResults = [];
-
-      for (const criterion of schema.eligibility) { 
-         const benefitCrateria = criterion;
-        const ruleId = benefitCrateria?.id;
-        if (!ruleId) {
-          throw new Error(`Missing rule id in criterion for schema: ${benefitCrateria.id}`);
+          continue;
         }
 
-        const result = await checkSchemaEligibility(userProfile, [benefitCrateria], customRules);
-        evaluationResults[ruleId] = result.isEligible;
-        criterionResults.push({
-          ruleId,
-          passed: result.isEligible,
-          description: criterion.description,
-          reasons: result.reasons,
-        });
-      }
-      const expression = customRules;
-      const isEligible = vm.runInNewContext(expression, evaluationResults);
-      if (isEligible) {
-        results.eligible.push({ schemaId: schema.id });
-      } else {
-        results.ineligible.push({
-          schemaId: schema.id,
-          reasons: criterionResults.filter((r) => !r.passed), // Optional
-        });
-      }
+        const evaluationResults = {};
+        const criterionResults = [];
+
+        for (const criterion of benefit.eligibility) {
+          const benefitCrateria = criterion;
+          const ruleId = benefitCrateria?.id;
+          if (!ruleId) {
+            throw new Error(
+              `Missing rule id in criterion for schema: ${benefitCrateria.id}`
+            );
+          }
+
+          const result = await checkSchemaEligibility(
+            userProfile,
+            [benefitCrateria],
+            customRules
+          );
+          evaluationResults[ruleId] = result.isEligible;
+          criterionResults.push({
+            ruleId,
+            passed: result.isEligible,
+            description: criterion.description,
+            reasons: result.reasons,
+          });
+        }
+        const expression = customRules;
+        const isEligible = vm.runInNewContext(expression, evaluationResults);
+        if (isEligible) {
+          results.eligible.push({ schemaId: benefit.id });
+        } else {
+          results.ineligible.push({
+            schemaId: benefit.id,
+            reasons: criterionResults.filter((r) => !r.passed), // Optional
+          });
+        }
       } catch (error) {
         results.errors.push({
-          schemaId: schema.id || "Unknown",
+          schemaId: benefit.id || "Unknown",
           error: error.message,
         });
       }
@@ -84,7 +90,6 @@ class EligibilityService {
 
     return results;
   }
-
 
   /**
    * Check if a user is eligible for a specific benefit scheme
@@ -127,7 +132,7 @@ class EligibilityService {
           condition,
           conditionValues
         );
-         if (!isEligible) {
+        if (!isEligible) {
           reasons.push({
             type: type,
             field: name,

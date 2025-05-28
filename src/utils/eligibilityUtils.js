@@ -6,7 +6,8 @@
  * @returns {boolean} Whether criterion is met
  */
 async function checkCriterion(userValue, condition, conditionValues) {
-  if (!condition) throw new Error("Condition is required for eligibility check");
+  if (!condition)
+    throw new Error("Condition is required for eligibility check");
 
   let conditionStr;
   if (typeof condition === "object") {
@@ -22,7 +23,9 @@ async function checkCriterion(userValue, condition, conditionValues) {
     case "equals":
       return userValue === conditionValues;
     case "in":
-      return Array.isArray(conditionValues) && conditionValues.includes(userValue);
+      return (
+        Array.isArray(conditionValues) && conditionValues.includes(userValue)
+      );
     case "greater than equals":
     case "greater_than_equals":
       return Number(userValue) >= Number(conditionValues);
@@ -41,5 +44,5 @@ async function checkCriterion(userValue, condition, conditionValues) {
 }
 
 module.exports = {
-  checkCriterion
+  checkCriterion,
 };
