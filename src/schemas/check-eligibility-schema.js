@@ -63,16 +63,17 @@ const benefitEligibleSchema = {
                   },
                 },
               // },
-            
-          },     
-        },
-       
-      },
-      
-     customRules: {
+        customRules: {
         type: "string",
         additionalProperties: true,
+          },
+          }, 
+           
+        },
+      
       },
+      
+    
     },
   },
   response: {
@@ -88,6 +89,11 @@ const benefitEligibleSchema = {
                 type: "string",
                 description: "ID of the eligible benefit scheme",
               },
+                details: {
+        type: "object",
+        description: "Additional eligibility details or messages",
+        additionalProperties: true
+      }
             },
           },
         },
@@ -100,22 +106,11 @@ const benefitEligibleSchema = {
                 type: "string",
                 description: "ID of the ineligible benefit scheme",
               },
-
-              reasons: {
-                type: "array",
-                items: {
-                  type: "object",
-                  properties: {
-                    type: { type: "string" },
-                    field: { type: "string" },
-                    reason: { type: "string" },
-                    description: { type: "string" },
-                    userValue: { type: ["string", "number"] },
-                    requiredValue: { type: ["string", "number", "array"] },
-                    condition: { type: "string" },
-                  },
-                },
-              },
+  details: {
+        type: "object",
+        description: "Additional eligibility details or messages",
+        additionalProperties: true
+      }
             },
           },
         },

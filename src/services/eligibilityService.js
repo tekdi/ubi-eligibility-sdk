@@ -6,7 +6,7 @@ const {
 } = require("../utils/benefitSchemaEligibility.js");
 const vm = require("vm");
 class EligibilityService {
-  constructor() {}
+  constructor() {} 
 
   /**
    * Check eligibility for all provided benefit schemas
@@ -15,7 +15,7 @@ class EligibilityService {
    * @param {Object} customRules - Optional custom rules
    * @returns {Object} Eligibility results
    */
-  async checkEligibility(userProfile, benefits, customRules) {
+  async checkEligibility(userProfile, benefits) {
     const results = {
       eligible: [],
       ineligible: [],
@@ -24,9 +24,9 @@ class EligibilityService {
 
     for (const benefit of benefits) {
       try {
+        const customRules = benefit.customRules ?? null;
         const benefitCrateria = benefit.eligibility;
-        if (!customRules) {
-          const eligibilityResult = await checkSchemaEligibility(
+          const eligibilityResult = await checkSchemaEligibility( //checkbenefiteligibility
             userProfile,
             benefitCrateria,
             customRules
@@ -35,51 +35,14 @@ class EligibilityService {
           if (eligibilityResult.isEligible) {
             results.eligible.push({
               schemaId: benefit.id,
+              details: eligibilityResult
             });
           } else {
             results.ineligible.push({
               schemaId: benefit.id,
-              reasons: eligibilityResult.reasons,
+              details: eligibilityResult
             });
           }
-          continue;
-        }
-
-        const evaluationResults = {};
-        const criterionResults = [];
-
-        for (const criterion of benefit.eligibility) {
-          const benefitCrateria = criterion;
-          const ruleId = benefitCrateria?.id;
-          if (!ruleId) {
-            throw new Error(
-              `Missing rule id in criterion for schema: ${benefitCrateria.id}`
-            );
-          }
-
-          const result = await checkSchemaEligibility(
-            userProfile,
-            [benefitCrateria],
-            customRules
-          );
-          evaluationResults[ruleId] = result.isEligible;
-          criterionResults.push({
-            ruleId,
-            passed: result.isEligible,
-            description: criterion.description,
-            reasons: result.reasons,
-          });
-        }
-        const expression = customRules;
-        const isEligible = vm.runInNewContext(expression, evaluationResults);
-        if (isEligible) {
-          results.eligible.push({ schemaId: benefit.id });
-        } else {
-          results.ineligible.push({
-            schemaId: benefit.id,
-            reasons: criterionResults.filter((r) => !r.passed), // Optional
-          });
-        }
       } catch (error) {
         results.errors.push({
           schemaId: benefit.id || "Unknown",
@@ -87,7 +50,6 @@ class EligibilityService {
         });
       }
     }
-
     return results;
   }
 
