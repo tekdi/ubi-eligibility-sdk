@@ -1,80 +1,30 @@
 const { checkCriterion } = require("../eligibilityUtils");
 
 class UserDocumentRule {
-    static extractValue(userProfile, criteria) {
-        return userProfile.documents?.[criteria.documentKey];
-    }
-
-    // Document validity check (moved from benefitSchemaEligibility.js)
-    static async checkDocumentValidity(userProfile, schema) {
-        const documentRequirements = schema.documents || [];
-
-        if (documentRequirements.length === 0) {
-            return { isValid: true, reason: null };
-        }
-
-        for (const requirement of documentRequirements) {
-            const { documentKey, strictChecking, allowedProofs } = requirement;
-
-            if (strictChecking) {
-                if (!userProfile.documents || !userProfile.documents[documentKey]) {
-                    return {
-                        isValid: false,
-                        reason: `Missing required document: ${documentKey}`
-                    };
-                }
-
-                const userDocument = userProfile.documents[documentKey];
-
-                if (!allowedProofs.includes(userDocument.type)) {
-                    return {
-                        isValid: false,
-                        reason: `Invalid document type for ${documentKey}. Allowed types: ${allowedProofs.join(', ')}`
-                    };
-                }
-
-                const isValid = await UserDocumentRule.validateDocument(userDocument);
-                if (!isValid) {
-                    return {
-                        isValid: false,
-                        reason: `Invalid document: ${documentKey}`
-                    };
-                }
-            }
-        }
-
-        return { isValid: true, reason: null };
-    }
-
-    // VC checker logic
-    static async validateDocument(document) {
-        try {
-            // TODO: Implement actual VC checker integration
-            return document.verified === true;
-        } catch (error) {
-            console.error('Error validating document:', error);
-            return false;
-        }
-    }
-
-    async execute(document, criteria) {
+    async execute(userProfile, criteria, strictCheckingFromQuery) {
         const reasons = [];
-        // Document validity check
-        if (criteria.strictChecking) {
-            const validity = await UserDocumentRule.validateDocument(document);
-            if (!validity) {
-                reasons.push({
-                    type: "userDocument",
-                    field: criteria.documentKey,
-                    reason: `Invalid or unverified document`,
-                    description: criteria.description || "",
-                });
-                return reasons;
-            }
+        // Use strictChecking from query param if provided, else from criteria
+        const strictChecking =
+            typeof strictCheckingFromQuery === "boolean"
+                ? strictCheckingFromQuery
+                : criteria.strictChecking;
+
+        // Extract the document
+        const document = userProfile.documents?.[criteria.documentKey];
+
+        // Strict checking for missing document
+        if ((document === undefined || document === null) && strictChecking) {
+            reasons.push({
+                type: "userDocument",
+                field: criteria.documentKey,
+                reason: `Missing required document: ${criteria.documentKey}`,
+                description: criteria.description || "",
+            });
+            return reasons;
         }
 
         // Allowed proofs check
-        if (criteria.allowedProofs && !criteria.allowedProofs.includes(document.type)) {
+        if (document && criteria.allowedProofs && !criteria.allowedProofs.includes(document.type)) {
             reasons.push({
                 type: "userDocument",
                 field: criteria.documentKey,
@@ -87,8 +37,22 @@ class UserDocumentRule {
             return reasons;
         }
 
-        // Use checkCriterion for other checks (e.g., verified, expiry, etc.)
-        if (criteria.condition) {
+        // Document validity check (verified)
+        if (document && strictChecking) {
+            const validity = await UserDocumentRule.validateDocument(document);
+            if (!validity) { 
+                reasons.push({
+                    type: "userDocument",
+                    field: criteria.documentKey,
+                    reason: `Invalid or unverified document`,
+                    description: criteria.description || "",
+                });
+                return reasons;
+            }
+        }
+
+        // Use checkCriterion for other checks (e.g., expiry, etc.)
+        if (document && criteria.condition) {
             const docValue = document[criteria.name];
             const isEligible = await checkCriterion(
                 docValue,
@@ -109,6 +73,16 @@ class UserDocumentRule {
         }
 
         return reasons;
+    }
+
+    static async validateDocument(document) {
+        try {
+            // TODO: Implement actual VC checker integration
+            return document.verified === true;
+        } catch (error) {
+            console.error('Error validating document:', error);
+            return false;
+        }
     }
 }
 

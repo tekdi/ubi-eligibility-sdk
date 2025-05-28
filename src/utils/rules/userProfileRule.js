@@ -1,15 +1,21 @@
 const { checkCriterion } = require("../eligibilityUtils");
-
 class UserProfileRule {
-    static extractValue(userProfile, criteria) {
-        // Extracts the value from userProfile based on the criteria's name
-        return userProfile[criteria.name];
-    }
-
-    async execute(value, criteria) {
+    async execute(userProfile, criteria, strictCheckingFromQuery) {
         const reasons = [];
-        console.log("Executing UserProfileRule with value:", value, "and criteria:", criteria);
-        // Use checkCriterion for all supported conditions
+        const strictChecking = 
+            typeof strictCheckingFromQuery === "boolean"
+                ? strictCheckingFromQuery
+                : criteria.strictChecking;
+        const value = userProfile[criteria.name];
+        if ((value === undefined || value === null) && strictChecking) {
+            reasons.push({
+                type: "userProfile",
+                field: criteria.name,
+                reason: `Missing required userProfile field: ${criteria.name}`,
+                description: criteria.description || "",
+            });
+            return reasons;
+        }
         const isEligible = await checkCriterion(
             value,
             criteria.condition,

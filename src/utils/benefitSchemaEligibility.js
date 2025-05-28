@@ -7,7 +7,7 @@ const ruleMap = {
   userDocument: UserDocumentRule,
 };
 
-async function checkSchemaEligibility(userProfile, benefit, customRules) {
+async function checkBenefiteligibility(userProfile, benefit,customRules, strictChecking) {
   if (!benefit || !Array.isArray(benefit)) {
     return {
       isEligible: false,
@@ -32,31 +32,14 @@ async function checkSchemaEligibility(userProfile, benefit, customRules) {
       continue;
     }
 
-    const valueToCheck = RuleClass.extractValue(userProfile, criteria);
-
-    if (
-      (valueToCheck === undefined || valueToCheck === null) &&
-      criteria.strictChecking
-    ) {
-      reasons.push({
-        type,
-        field: criteria.name || criteria.documentKey,
-        reason: `Missing required field/document: ${criteria.name || criteria.documentKey}`,
-        description,
-      });
-      continue;
-    }
-
-    let passed = true;
-    let ruleReasons = [];
-    if (valueToCheck !== undefined && valueToCheck !== null) {
-      const ruleInstance = new RuleClass();
-      ruleReasons = await ruleInstance.execute(valueToCheck, criteria);
-      if (ruleReasons.length > 0) {
-        passed = false;
-        reasons.push(...ruleReasons);
-      }
-    }
+  let passed = true;
+let ruleReasons = [];
+const ruleInstance = new RuleClass();
+ruleReasons = await ruleInstance.execute(userProfile, criteria, strictChecking);
+if (ruleReasons.length > 0) {
+  passed = false;
+  reasons.push(...ruleReasons);
+}
     const ruleKey = criterion.id || criterion.name || `criterion_${Math.random()}`;
     evaluationResults[ruleKey] = passed;
     criterionResults.push({
@@ -102,5 +85,5 @@ async function checkSchemaEligibility(userProfile, benefit, customRules) {
 }
 
 module.exports = {
-  checkSchemaEligibility,
+  checkBenefiteligibility,
 };

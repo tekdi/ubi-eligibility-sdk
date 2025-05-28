@@ -1,6 +1,6 @@
 const { checkCriterion } = require("../utils/eligibilityUtils");
 const {
-  checkSchemaEligibility,
+  checkBenefiteligibility,
   checkDocumentValidity,
   validateDocument,
 } = require("../utils/benefitSchemaEligibility.js");
@@ -15,7 +15,7 @@ class EligibilityService {
    * @param {Object} customRules - Optional custom rules
    * @returns {Object} Eligibility results
    */
-  async checkEligibility(userProfile, benefits) {
+  async checkEligibility(userProfile, benefits, strictChecking) {
     const results = {
       eligible: [],
       ineligible: [],
@@ -26,10 +26,11 @@ class EligibilityService {
       try {
         const customRules = benefit.customRules ?? null;
         const benefitCrateria = benefit.eligibility;
-          const eligibilityResult = await checkSchemaEligibility( //checkbenefiteligibility
+          const eligibilityResult = await checkBenefiteligibility( //checkbenefiteligibility
             userProfile,
             benefitCrateria,
-            customRules
+            customRules,
+            strictChecking
           );
 
           if (eligibilityResult.isEligible) {
