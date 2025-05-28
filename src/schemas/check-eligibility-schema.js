@@ -30,7 +30,7 @@ const benefitEligibleSchema = {
   description: "Checks if a user is eligible for all available benefit schemes",
   body: {
     type: "object",
-    required: ["userProfile", "benefitSchemas", "customRules"],
+    required: ["userProfile", "benefitSchemas"],
     properties: {
       userProfile: userProfileSchema,
       benefitSchemas: {

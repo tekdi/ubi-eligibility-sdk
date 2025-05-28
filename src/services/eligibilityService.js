@@ -1,4 +1,4 @@
-const { checkCriterion, applyCustomRule } = require("../utils/eligibilityUtils");
+const { checkCriterion } = require("../utils/eligibilityUtils");
 const {
     checkSchemaEligibility,
     checkDocumentValidity,
@@ -44,9 +44,9 @@ class EligibilityService {
           }
            continue;
         }
-         // Custom rules exist – evaluate each criterion individually by its `id`
+      
       const evaluationResults = {};
-      const criterionResults = []; // Optional: for reason tracking
+      const criterionResults = [];
 
       for (const criterion of schema.eligibility) { 
          const benefitCrateria = criterion;
@@ -57,7 +57,6 @@ class EligibilityService {
 
         const result = await checkSchemaEligibility(userProfile, [benefitCrateria], customRules);
         evaluationResults[ruleId] = result.isEligible;
-console.log(evaluationResults,'==',criterionResults)
         criterionResults.push({
           ruleId,
           passed: result.isEligible,

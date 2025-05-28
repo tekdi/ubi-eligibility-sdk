@@ -40,43 +40,6 @@ async function checkCriterion(userValue, condition, conditionValues) {
   }
 }
 
-/**
- * Apply a custom rule
- * @param {*} userValue 
- * @param {*} rule 
- * @returns {boolean}
- */
-function applyCustomRule(userValue, rule) {
-  if (!rule.condition || rule.value === undefined) {
-    throw new Error("Custom rule must have condition and value properties");
-  }
-
-  const value = Number(userValue);
-  const ruleValue = Number(rule.value);
-
-  switch (rule.condition.toLowerCase()) {
-    case "equals":
-      return value === ruleValue;
-    case "not equals":
-      return value !== ruleValue;
-    case "greater than":
-      return value > ruleValue;
-    case "less than":
-      return value < ruleValue;
-    case "greater than equals":
-      return value >= ruleValue;
-    case "less than equals":
-      return value <= ruleValue;
-    case "in":
-      return Array.isArray(rule.value) && rule.value.includes(userValue);
-    case "not in":
-      return Array.isArray(rule.value) && !rule.value.includes(userValue);
-    default:
-      throw new Error(`Unsupported custom condition: ${rule.condition}`);
-  }
-}
-
 module.exports = {
-  checkCriterion,
-  applyCustomRule,
+  checkCriterion
 };
