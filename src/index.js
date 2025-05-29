@@ -127,8 +127,9 @@ fastify.post(
 // Start server
 const start = async () => {
   try {
+    const port = process.env.PORT || 3000;
     await fastify.ready();
-    await fastify.listen({ port: 3000, host: "0.0.0.0" });
+    await fastify.listen({ port: port, host: "0.0.0.0" });
     fastify.log.info(`Server is running on ${fastify.server.address().port}`);
   } catch (err) {
     fastify.log.error(err);

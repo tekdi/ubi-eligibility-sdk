@@ -1,5 +1,6 @@
 require("dotenv").config();
-
+const {benefitEligibleSchema, userProfileSchema} = require("../schemas/check-eligibility-schema.js");
+const {userEligibilitySchema, benefitSchema} = require("../schemas/check-users-eligibility-schema.js");
 const swaggerConfig = {
   openapi: "3.0.0",
   info: {
@@ -38,206 +39,12 @@ const swaggerConfig = {
   ],
   components: {
     schemas: {
-      UserProfile: {
-        type: "object",
-        required: ["name", "gender", "age", "dateOfBirth", "caste", "income"],
-        properties: {
-          name: { type: "string", description: "Full name of the user" },
-          gender: {
-            type: "string",
-            enum: ["male", "female"],
-            description: "Gender of the user",
-          },
-          age: { type: "number", description: "Age of the user" },
-          dateOfBirth: {
-            type: "string",
-            format: "date",
-            description: "Date of birth in YYYY-MM-DD format",
-          },
-          caste: {
-            type: "string",
-            enum: ["sc", "st", "obc", "general"],
-            description: "Caste category",
-          },
-          income: { type: "number", description: "Annual income in INR" },
-          documents: {
-            type: "object",
-            description: "User documents with verification status",
-            additionalProperties: {
-              type: "object",
-              properties: {
-                verified: {
-                  type: "boolean",
-                  description: "Whether the document is verified",
-                },
-              },
-            },
-          },
-        },
-      },
-      BenefitSchema: {
-        type: "object",
-        required: ["en", "id"],
-        properties: {
-          id: { type: "string", description: "ID of the benefit scheme" },
-          en: {
-            type: "object",
-            required: ["eligibility"],
-            properties: {
-              eligibility: {
-                type: "array",
-                items: {
-                  type: "object",
-                  required: ["type", "description", "criteria"],
-                  properties: {
-                    type: {
-                      type: "string",
-                      enum: [
-                        "personal",
-                        "educational",
-                        "economical",
-                        "geographical",
-                      ],
-                      description: "Type of eligibility criterion",
-                    },
-                    description: {
-                      type: "string",
-                      description: "Description of the eligibility criterion",
-                    },
-                    criteria: {
-                      type: "object",
-                      required: ["name", "condition", "conditionValues"],
-                      properties: {
-                        name: {
-                          type: "string",
-                          description: "Name of the criterion field",
-                        },
-                        condition: {
-                          type: "string",
-                          enum: [
-                            "equals",
-                            "in",
-                            "greater than equals",
-                            "less than equals",
-                            "between",
-                          ],
-                          description: "Condition to check",
-                        },
-                        conditionValues: {
-                          oneOf: [
-                            { type: "string" },
-                            { type: "number" },
-                            {
-                              type: "array",
-                              items: { type: ["string", "number"] },
-                            },
-                          ],
-                          description: "Value(s) to compare against",
-                        },
-                      },
-                    },
-                    allowedProofs: {
-                      type: "array",
-                      items: { type: "string" },
-                      description:
-                        "List of allowed document types for verification",
-                    },
-                  },
-                },
-              },
-            },
-          },
-        },
-      },
-      EligibilityResponse: {
-        type: "object",
-        properties: {
-          eligibleUsers: {
-            type: "array",
-            items: {
-              type: "object",
-              properties: {
-                name: {
-                  type: "string",
-                  description: "Name of the eligible user",
-                },
-                applicationId: {
-                  type: "string",
-                  description: "Application ID of the eligible user",
-                },
-              },
-            },
-          },
-          ineligibleUsers: {
-            type: "array",
-            items: {
-              type: "object",
-              properties: {
-                name: {
-                  type: "string",
-                  description: "Name of the ineligible user",
-                },
-                applicationId: {
-                  type: "string",
-                  description: "Application ID of the eligible user",
-                },
-                reasons: {
-                  type: "array",
-                  items: { type: "string" },
-                  description: "List of reasons why the user is ineligible",
-                },
-              },
-            },
-          },
-        },
-      },
-      CheckEligibilityResponse: {
-        type: "object",
-        properties: {
-          eligible: {
-            type: "array",
-            items: {
-              type: "object",
-              properties: {
-                schemaId: {
-                  type: "string",
-                  description: "ID of the eligible benefit scheme",
-                },
-              },
-            },
-          },
-          ineligible: {
-            type: "array",
-            items: {
-              type: "object",
-              properties: {
-                schemaId: {
-                  type: "string",
-                  description: "ID of the ineligible benefit scheme",
-                },
-                reasons: {
-                  type: "array",
-                  items: { type: "string" },
-                  description: "List of reasons why the user is ineligible",
-                },
-              },
-            },
-          },
-          errors: {
-            type: "array",
-            items: {
-              type: "object",
-              properties: {
-                schemaId: {
-                  type: "string",
-                  description: "ID of the schema with error",
-                },
-                error: { type: "string", description: "Error message" },
-              },
-            },
-          },
-        },
-      },
+      UserProfile: userProfileSchema,
+      BenefitSchema: benefitSchema,
+      EligibilityResponse: benefitEligibleSchema.response[200],
+      EligibilityResponseBad: benefitEligibleSchema.response[400],
+      CheckEligibilityResponse: userEligibilitySchema.response[200],
+      CheckEligibilityResponseBad: userEligibilitySchema.response[400],
     },
   },
   paths: {
@@ -261,12 +68,6 @@ const swaggerConfig = {
                     type: "array",
                     items: { $ref: "#/components/schemas/BenefitSchema" },
                   },
-                  customRules: {
-                    type: "object",
-                    description:
-                      "Custom rules to override standard eligibility checks",
-                    additionalProperties: true,
-                  },
                 },
               },
             },
@@ -278,7 +79,7 @@ const swaggerConfig = {
             content: {
               "application/json": {
                 schema: {
-                  $ref: "#/components/schemas/CheckEligibilityResponse",
+                  $ref: "#/components/schemas/EligibilityResponse",
                 },
               },
             },
@@ -288,10 +89,7 @@ const swaggerConfig = {
             content: {
               "application/json": {
                 schema: {
-                  type: "object",
-                  properties: {
-                    error: { type: "string", description: "Error message" },
-                  },
+                  $ref: "#/components/schemas/EligibilityResponseBad",
                 },
               },
             },
@@ -315,7 +113,7 @@ const swaggerConfig = {
                 properties: {
                   userProfiles: {
                     type: "array",
-                    items: { $ref: "#/components/schemas/UyserProfile" },
+                    items: { $ref: "#/components/schemas/UserProfile" },
                   },
                   benefitSchema: { $ref: "#/components/schemas/BenefitSchema" },
                 },
@@ -328,7 +126,7 @@ const swaggerConfig = {
             description: "Successful response",
             content: {
               "application/json": {
-                schema: { $ref: "#/components/schemas/EligibilityResponse" },
+                schema: { $ref: "#/components/schemas/CheckEligibilityResponse" },
               },
             },
           },
@@ -336,12 +134,7 @@ const swaggerConfig = {
             description: "Bad request",
             content: {
               "application/json": {
-                schema: {
-                  type: "object",
-                  properties: {
-                    error: { type: "string", description: "Error message" },
-                  },
-                },
+                  schema: { $ref: "#/components/schemas/CheckEligibilityResponseBad" },
               },
             },
           },

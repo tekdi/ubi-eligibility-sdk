@@ -54,8 +54,9 @@ const benefitEligibleSchema = {
                   type: "array",
                   items: {
                     type: "object",
-                    required: ["type", "description", "criteria"],
+                    required: ["id","type", "description", "criteria"],
                     properties: {
+                      id: { type: "string" },
                       type: { type: "string" },
                       description: { type: "string" },
                       criteria: {
@@ -63,7 +64,6 @@ const benefitEligibleSchema = {
                         required: ["name", "condition", "conditionValues"],
                         properties: {
                           name: { type: "string" },
-                          
                           condition: { type: "string" },
                           conditionValues: {
                             type: ["string", "number", "array"],
@@ -160,4 +160,4 @@ const benefitEligibleSchema = {
   },
 };
 
-module.exports = benefitEligibleSchema;
+module.exports = {benefitEligibleSchema, userProfileSchema};

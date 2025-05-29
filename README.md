@@ -30,85 +30,144 @@ The server will start on port 3000 by default.
 ### API Endpoints
 
 #### Health Check
+
 ```
 GET /health
 ```
 
 #### Check Eligibility
+
 ```
 POST /check-eligibility
 ```
 
 Request Body:
+
 ```json
 {
   "userProfile": {
     "name": "John Doe",
-    "gender": "Male",
-    "age": 28,
-    "dateOfBirth": "1997-05-15",
+    "gender": "male",
+    "age": 16,
+    "dateOfBirth": "2008-01-01",
     "caste": "sc",
-    "income": 100000
+    "income": 400,
+    "class": "9",
+    "previousYearMarks": 75,
+    "state": "Maharastra"
   },
   "benefitSchemas": [
     {
-      "en": {
-        "basicDetails": {
-          "title": "Example Scholarship",
-          "category": "education",
-          "subCategory": "scholarship"
-        },
-        "eligibility": [
-          {
-            "type": "personal",
-            "description": "Age must be between 18 and 30",
-            "criteria": {
-              "name": "age",
-              "condition": "greater than equals",
-              "conditionValues": "18"
-            }
+      "id": "ubi-pilot-scholarship-1",
+      "eligibility": [
+        {
+          "type": "userProfile",
+          "id": "B1",
+          "description": "The applicant must be from SC or ST or OBC castes",
+          "criteria": {
+            "documentKey": "casteCertificate",
+            "name": "caste",
+            "condition": "in",
+            "conditionValues": ["sc", "st", "obc"]
           }
-        ]
-      }
+        },
+        {
+          "id": "B3",
+          "type": "userProfile",
+          "description": "The applicant must be from Rajasthan state",
+          "criteria": {
+            "documentKey": "incomeCertificate",
+            "name": "state",
+            "condition": "equals",
+            "conditionValues": "Rajasthan"
+          }
+        }
+      ],
+      "customRules": "(B1 && B2) || B3"
     }
-  ],
-  "customRules": {
-    "age": (value) => value >= 18 && value <= 30
-  }
+  ]
 }
 ```
 
 Response:
+
 ```json
 {
-  "eligible": [
-    {
-      "schemaId": "Example Scholarship",
-      "details": {
-        "title": "Example Scholarship",
-        "category": "education",
-        "subCategory": "scholarship"
-      },
-      "benefits": {
-        "type": "financial",
-        "title": "Scholarship Amount",
-        "description": "Annual scholarship of 50000"
-      }
-    }
-  ],
-  "ineligible": [],
-  "errors": []
+    "eligible": [
+        {
+            "schemaId": "ubi-pilot-scholarship-1",
+            "details": {
+                "isEligible": true,
+                "reasons": [
+                    "Eligible because custom rule \"(B1 && B2) || B3\" evaluated to true with: {\"B5\":true,\"B4\":true,\"B1\":true,\"B2\":true,\"B3\":false}"
+                ],
+                "evaluationResults": {
+                    "B5": true,
+                    "B4": true,
+                    "B1": true,
+                    "B2": true,
+                    "B3": false
+                },
+                "criterionResults": [
+                    {
+                        "ruleKey": "B5",
+                        "passed": true,
+                        "description": "Gender of Applicant - both male and female allowed to avail scholarship",
+                        "reasons": []
+                    },
+                    {
+                        "ruleKey": "B4",
+                        "passed": true,
+                        "description": "The applicant must be a student studying in Class 9th to Class 12th",
+                        "reasons": []
+                    },
+                    {
+                        "ruleKey": "B1",
+                        "passed": true,
+                        "description": "The applicant must be from SC or ST or OBC castes",
+                        "reasons": []
+                    },
+                    {
+                        "ruleKey": "B2",
+                        "passed": true,
+                        "description": "The Total Annual income of parents/guardians of the applicant must not exceed ₹ 2.50 Lakh per Annum",
+                        "reasons": []
+                    },
+                    {
+                        "ruleKey": "B3",
+                        "passed": false,
+                        "description": "The applicant must be from Rajasthan state",
+                        "reasons": [
+                            {
+                                "type": "userProfile",
+                                "field": "state",
+                                "reason": "Does not meet criteria: equals",
+                                "description": "",
+                                "userValue": "mh",
+                                "requiredValue": "Rajasthan",
+                                "condition": "equals"
+                            }
+                        ]
+                    }
+                ]
+            }
+        }
+    ],
+    "ineligible": [],
+    "errors": []
 }
 ```
 
 ## Development
 
 ### Running Tests
+
 ```bash
 npm test
 ```
 
 ### Linting
+
 ```bash
 npm run lint
 ```
@@ -120,6 +179,7 @@ Swagger documentation is available at `/documentation` when the server is runnin
 ## Error Handling
 
 The SDK provides comprehensive error handling for:
+
 - Invalid input data
 - Missing required fields
 - Schema validation errors
@@ -127,4 +187,4 @@ The SDK provides comprehensive error handling for:
 
 ## License
 
-MIT 
+MIT
