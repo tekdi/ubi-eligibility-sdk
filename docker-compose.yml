@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  eligibility-sdk:
+    container_name: eligibility-sdk
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    image: eligibility-sdk:latest
+    ports:
+      - "3011:3011"
+    env_file: .env
+    environment:
+      HOST: ${HOST}
+      PORT: ${PORT}
+    restart: unless-stopped

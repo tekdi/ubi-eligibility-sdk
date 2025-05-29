@@ -1,0 +1,272 @@
+swagger: '2.0'
+info:
+  title: 'Benefit Eligibility SDK'
+  description: 'API for processing benefit eligibility based on user profiles and schemas'
+  version: '1.0.0'
+host: 'localhost:3000'
+schemes:
+  - http
+consumes:
+  - application/json
+produces:
+  - application/json
+tags:
+  - name: System
+    description: System related endpoints
+  - name: Eligibility
+    description: Eligibility check endpoints
+definitions:
+  UserProfile:
+    type: object
+    required:
+      - name
+      - gender
+      - age
+      - dateOfBirth
+      - caste
+      - income
+    properties:
+      name:
+        type: string
+        description: Full name of the user
+      gender:
+        type: string
+        description: Gender of the user
+        enum:
+          - Male
+          - Female
+      age:
+        type: number
+        description: Age of the user
+      dateOfBirth:
+        type: string
+        format: date
+        description: Date of birth in YYYY-MM-DD format
+      caste:
+        type: string
+        description: Caste category
+        enum:
+          - sc
+          - st
+          - obc
+          - general
+      income:
+        type: number
+        description: Annual income in INR
+
+  BenefitSchema:
+    type: object
+    required:
+      - en
+    properties:
+      en:
+        type: object
+        required:
+          - basicDetails
+          - benefitContent
+          - eligibility
+        properties:
+          basicDetails:
+            type: object
+            required:
+              - title
+              - category
+              - subCategory
+            properties:
+              title:
+                type: string
+                description: Title of the benefit scheme
+              category:
+                type: string
+                description: Category of the benefit
+              subCategory:
+                type: string
+                description: Sub-category of the benefit
+              tags:
+                type: array
+                items:
+                  type: string
+                description: Tags associated with the benefit
+              applicationOpenDate:
+                type: string
+                format: date
+                description: Application opening date
+              applicationCloseDate:
+                type: string
+                format: date
+                description: Application closing date
+          benefitContent:
+            type: object
+            required:
+              - benefits
+            properties:
+              benefits:
+                type: array
+                items:
+                  type: object
+                  required:
+                    - type
+                    - title
+                    - description
+                  properties:
+                    type:
+                      type: string
+                      enum:
+                        - financial
+                        - non-monetary
+                      description: Type of benefit
+                    title:
+                      type: string
+                      description: Title of the benefit
+                    description:
+                      type: string
+                      description: Description of the benefit
+          eligibility:
+            type: array
+            items:
+              type: object
+              required:
+                - type
+                - description
+                - criteria
+              properties:
+                type:
+                  type: string
+                  enum:
+                    - personal
+                    - educational
+                    - economical
+                    - geographical
+                  description: Type of eligibility criteria
+                description:
+                  type: string
+                  description: Description of the eligibility criteria
+                criteria:
+                  type: object
+                  required:
+                    - name
+                    - condition
+                    - conditionValues
+                  properties:
+                    name:
+                      type: string
+                      description: Name of the criteria
+                    condition:
+                      type: string
+                      enum:
+                        - equals
+                        - in
+                        - greater than equals
+                        - less than equals
+                      description: Condition to check
+                    conditionValues:
+                      oneOf:
+                        - type: string
+                          description: Single string value
+                        - type: number
+                          description: Single numeric value
+                        - type: array
+                          items:
+                            type: string
+                          description: Array of string values
+                      description: Value(s) to compare against
+
+paths:
+  /health:
+    get:
+      tags:
+        - System
+      summary: Health check endpoint
+      description: Returns the health status of the API
+      responses:
+        '200':
+          description: Health status
+          schema:
+            type: object
+            properties:
+              status:
+                type: string
+                enum:
+                  - ok
+                description: Health status
+
+  /check-eligibility:
+    post:
+      tags:
+        - Eligibility
+      summary: Check eligibility for benefits
+      description: Checks if a user is eligible for one or more benefit schemes
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            type: object
+            required:
+              - userProfile
+              - benefitsList
+            properties:
+              userProfile:
+                $ref: '#/definitions/UserProfile'
+              benefitsList:
+                type: array
+                items:
+                  $ref: '#/definitions/BenefitSchema'
+                description: List of benefit schemes to check eligibility against
+              eligibilityEvaluationLogic:
+                type: object
+                additionalProperties: true
+                description: Custom rules to override standard eligibility checks
+      responses:
+        '200':
+          description: Eligibility check results
+          schema:
+            type: object
+            properties:
+              eligible:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    schemaId:
+                      type: string
+                      description: ID or title of the eligible benefit scheme
+                    details:
+                      type: object
+                      description: Basic details of the eligible benefit
+                    benefits:
+                      type: object
+                      description: Benefits provided by the scheme
+                description: List of benefit schemes the user is eligible for
+              ineligible:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    schemaId:
+                      type: string
+                      description: ID or title of the ineligible benefit scheme
+                    details:
+                      type: object
+                      description: Basic details of the ineligible benefit
+                description: List of benefit schemes the user is not eligible for
+              errors:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    schemaId:
+                      type: string
+                      description: ID or title of the benefit scheme that caused an error
+                    error:
+                      type: string
+                      description: Error message
+                description: List of errors encountered during eligibility check
+        '400':
+          description: Bad request
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                description: Error message 
