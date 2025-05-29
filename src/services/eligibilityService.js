@@ -1,10 +1,6 @@
-const { checkCriterion } = require("../utils/eligibilityUtils");
 const {
-  checkBenefiteligibility,
-  checkDocumentValidity,
-  validateDocument,
+  checkBenefiteligibility
 } = require("../utils/benefitSchemaEligibility.js");
-const vm = require("vm");
 class EligibilityService {
   constructor() {} 
 
@@ -55,103 +51,45 @@ class EligibilityService {
   }
 
   /**
-   * Check if a user is eligible for a specific benefit scheme
-   * @param {Object} userProfile - User profile data
-   * @param {Object} scheme - Benefit scheme to check against
-   * @returns {Object} Eligibility result with reasons
-   */
-  async checkUserEligibility(userProfile, scheme) {
-    const reasons = [];
-    const enSchema = scheme.en;
-
-    if (reasons.length === 0) {
-      // Check each eligibility criterion
-      for (const criterion of enSchema.eligibility) {
-        const { type, description, criteria } = criterion;
-        const { name, condition, conditionValues } = criteria;
-
-        // Get user value for the criterion
-        const userValue = userProfile[name];
-        if (userValue === undefined) {
-          reasons.push(`Missing required field: ${name} (${description})`);
-          continue;
-        }
-
-        // Check document requirements if specified
-        if (criterion.allowedProofs) {
-          const hasValidDocument = await checkDocumentValidity(
-            userProfile,
-            criterion
-          );
-          if (!hasValidDocument) {
-            reasons.push(`Missing or invalid document for: ${description}`);
-            continue;
-          }
-        }
-
-        // Apply the condition check
-        const isEligible = await checkCriterion(
-          userValue,
-          condition,
-          conditionValues
-        );
-        if (!isEligible) {
-          reasons.push({
-            type: type,
-            field: name,
-            reason: `Does not meet ${type} criteria: ${description}`,
-            description: description,
-            userValue: userValue,
-            requiredValue: conditionValues,
-            condition: condition,
-          });
-        }
-      }
-    }
-
-    return {
-      isEligible: reasons.length === 0,
-      reasons: reasons,
-    };
-  }
-
-  /**
    * Check which users are eligible for a specific benefit scheme
    * @param {Array} userProfiles - Array of user profiles
    * @param {Object} scheme - Benefit scheme to check against
    * @returns {Object} List of eligible and ineligible users with reasons
    */
-  async checkUsersEligibility(userProfiles, scheme) {
+  async checkUsersEligibility(userProfiles, benefit, strictChecking) {
     const results = {
       eligibleUsers: [],
       ineligibleUsers: [],
+      errors: [],
     };
-
+       
     for (const userProfile of userProfiles) {
-      const eligibilityResult = await this.checkUserEligibility(
-        userProfile,
-        scheme
-      );
-
-      if (eligibilityResult.isEligible) {
-        results.eligibleUsers.push({
-          ...userProfile,
-          eligibleSchemes: [eligibilityResult.schemeDetails],
-        });
-      } else {
-        // Convert reasons to simple strings
-        const reasonStrings = eligibilityResult.reasons.map((reason) => {
-          if (typeof reason === "string") {
-            return reason;
-          } else if (typeof reason === "object") {
-            return `${reason.type}: ${reason.reason} (${reason.description})`;
+        try {
+        const customRules = benefit.customRules ?? null;
+        const benefitCrateria = benefit.eligibility;
+          const eligibilityResult = await checkBenefiteligibility(
+            userProfile,
+            benefitCrateria,
+            customRules,
+            strictChecking
+          );
+          if (eligibilityResult.isEligible) {
+            results.eligibleUsers.push({
+              applicationId: userProfile.applicationId,
+              name: userProfile.name,
+              details: eligibilityResult
+            });
+          } else {
+            results.ineligibleUsers.push({
+              applicationId: userProfile.applicationId,
+              name: userProfile.name,
+              details: eligibilityResult
+            });
           }
-          return "Not eligible";
-        });
-
-        results.ineligibleUsers.push({
-          ...userProfile,
-          reasons: reasonStrings,
+      } catch (error) {
+        results.errors.push({
+          applicationId: userProfile.applicationId || "Unknown",
+          error: error.message,
         });
       }
     }

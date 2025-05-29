@@ -1,8 +1,6 @@
 const benefitSchema = {
-  type: "object",
-  required: ["en"],
-  properties: {
-    en: {
+  
+ 
       type: "object",
       required: ["eligibility"],
       properties: {
@@ -44,9 +42,7 @@ const benefitSchema = {
           },
         },
       },
-    },
-  },
-};
+    }
 
 const userEligibilitySchema = {
       tags: ["Eligibility"],
@@ -124,6 +120,11 @@ const userEligibilitySchema = {
                     type: "string",
                     description: "Application ID of the eligible user",
                   },
+                          details: {
+        type: "object",
+        description: "Additional eligibility details or messages",
+        additionalProperties: true
+      }
                 },
               },
             },
@@ -140,11 +141,11 @@ const userEligibilitySchema = {
                     type: "string",
                     description: "Application ID of the eligible user",
                   },
-                  reasons: {
-                    type: "array",
-                    items: { type: "string" },
-                    description: "List of reasons why the user is ineligible",
-                  },
+                         details: {
+        type: "object",
+        description: "Additional eligibility details or messages",
+        additionalProperties: true
+      }
                 },
               },
             },

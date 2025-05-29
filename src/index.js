@@ -111,35 +111,6 @@ fastify.post(
     try {
       const { userProfiles, benefitSchema } = request.body;
 
-      // if (!userProfiles || !benefitSchema) {
-      //   throw new Error("User profiles and benefit schema are required");
-      // }
-
-      // // Validate user profiles
-      // for (const profile of userProfiles) {
-      //   const validation = validationService.validateUserProfile(
-      //     profile,
-      //     userProfileSchema
-      //   );
-      //   if (!validation.isValid) {
-      //     return reply.code(400).send({
-      //       error: "Invalid user profile",
-      //       details: validation.errors,
-      //     });
-      //   }
-      // }
-
-      // // Validate benefit schema
-      // const schemaValidation =
-      //   validationService.validateBenefitSchema(benefitSchema);
-      // if (!schemaValidation.isValid) {
-      //   return reply.code(400).send({
-      //     error: "Invalid benefit schema",
-      //     details: schemaValidation.errors,
-      //   });
-      // }
-
-      // Check eligibility for each user
       const results = await eligibilityService.checkUsersEligibility(
         userProfiles,
         benefitSchema
