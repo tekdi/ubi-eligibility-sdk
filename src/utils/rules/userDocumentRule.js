@@ -12,19 +12,22 @@ class UserDocumentRule {
         // Extract the document
         const document = userProfile.documents?.[criteria.documentKey];
 
-        // Strict checking for missing document
-        if ((document === undefined || document === null) && strictChecking) {
-            reasons.push({
-                type: "userDocument",
-                field: criteria.documentKey,
-                reason: `Missing required document: ${criteria.documentKey}`,
-                description: criteria.description || "",
-            });
+        // If document is missing
+        if (document === undefined || document === null) {
+            if (strictChecking) {
+                reasons.push({
+                    type: "userDocument",
+                    field: criteria.documentKey,
+                    reason: `Missing required document: ${criteria.documentKey}`,
+                    description: criteria.description || "",
+                });
+            }
+            // If not strict, missing document is considered eligible (skip further checks)
             return reasons;
         }
 
         // Allowed proofs check
-        if (document && criteria.allowedProofs && !criteria.allowedProofs.includes(document.type)) {
+        if (criteria.allowedProofs && !criteria.allowedProofs.includes(document.type)) {
             reasons.push({
                 type: "userDocument",
                 field: criteria.documentKey,
@@ -38,7 +41,7 @@ class UserDocumentRule {
         }
 
         // Document validity check (verified)
-        if (document && strictChecking) {
+        if (strictChecking) {
             const validity = await UserDocumentRule.validateDocument(document);
             if (!validity) { 
                 reasons.push({
@@ -52,7 +55,7 @@ class UserDocumentRule {
         }
 
         // Use checkCriterion for other checks (e.g., expiry, etc.)
-        if (document && criteria.condition) {
+        if (criteria.condition) {
             const docValue = document[criteria.name];
             const isEligible = await checkCriterion(
                 docValue,

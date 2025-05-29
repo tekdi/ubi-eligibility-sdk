@@ -85,7 +85,7 @@ fastify.post(
   async (request, reply) => {
     try {
       const strictChecking = request.query.strictChecking === "true";
-      const { userProfile, benefitSchemas, customRules } = request.body;
+      const { userProfile, benefitSchemas } = request.body;
       // Process eligibility
       const results = await eligibilityService.checkEligibility(
         userProfile,

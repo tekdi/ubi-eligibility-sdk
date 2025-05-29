@@ -7,13 +7,15 @@ class UserProfileRule {
                 ? strictCheckingFromQuery
                 : criteria.strictChecking;
         const value = userProfile[criteria.name];
-        if ((value === undefined || value === null) && strictChecking) {
-            reasons.push({
-                type: "userProfile",
-                field: criteria.name,
-                reason: `Missing required userProfile field: ${criteria.name}`,
-                description: criteria.description || "",
-            });
+        if ((value === undefined || value === null)) {
+           if (strictChecking) {
+                reasons.push({
+                    type: "userProfile",
+                    field: criteria.name,
+                    reason: `Missing required userProfile field: ${criteria.name}`,
+                    description: criteria.description || "",
+                });
+            }
             return reasons;
         }
         const isEligible = await checkCriterion(
