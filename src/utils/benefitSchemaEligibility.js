@@ -40,7 +40,7 @@ if (ruleReasons.length > 0) {
   passed = false;
   reasons.push(...ruleReasons);
 }
-    const ruleKey = criterion.id || criterion.name || `criterion_${Math.random()}`;
+    const ruleKey = criterion.id;
     evaluationResults[ruleKey] = passed;
     criterionResults.push({
       ruleKey,
