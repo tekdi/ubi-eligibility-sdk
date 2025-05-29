@@ -1,11 +1,11 @@
 /**
- * Check a single criterion against user value
- * @param {*} userValue - User's value for the criterion
+ * Check a single criteria against user value
+ * @param {*} userValue - User's value for the criteria
  * @param {string|object} condition - Condition to check
  * @param {*} conditionValues - Values to compare against
- * @returns {boolean} Whether criterion is met
+ * @returns {boolean} Whether criteria is met
  */
-async function checkCriterion(userValue, condition, conditionValues) {
+async function checkCriteria(userValue, condition, conditionValues) {
   if (!condition)
     throw new Error("Condition is required for eligibility check");
 
@@ -44,5 +44,5 @@ async function checkCriterion(userValue, condition, conditionValues) {
 }
 
 module.exports = {
-  checkCriterion,
+  checkCriteria,
 };

@@ -14,9 +14,9 @@ classDiagram
 
     class EligibilityService {
         -validators: Map
-        +checkEligibility(userProfile, benefitSchemas, customRules)
-        +checkSchemaEligibility(userProfile, schema, customRules)
-        +checkCriterion(userProfile, criterion, customRules)
+        +checkBenefitsEligibility(userProfile, benefitsList, eligibilityEvaluationLogic)
+        +checkSchemaEligibility(userProfile, schema, eligibilityEvaluationLogic)
+        +checkCriteria(userProfile, criteria, eligibilityEvaluationLogic)
         -applyCustomRule(userValue, rule)
     }
 

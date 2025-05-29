@@ -56,7 +56,7 @@ Request Body:
     "previousYearMarks": 75,
     "state": "Maharastra"
   },
-  "benefitSchemas": [
+  "benefitsList": [
     {
       "id": "ubi-pilot-scholarship-1",
       "eligibility": [
@@ -83,7 +83,7 @@ Request Body:
           }
         }
       ],
-      "customRules": "(B1 && B2) || B3"
+      "eligibilityEvaluationLogic": "(B1 && B2) || B3"
     }
   ]
 }
@@ -108,7 +108,7 @@ Response:
                     "B2": true,
                     "B3": false
                 },
-                "criterionResults": [
+                "criteriaResults": [
                     {
                         "ruleKey": "B5",
                         "passed": true,

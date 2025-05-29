@@ -1,5 +1,5 @@
 const {
-  checkBenefiteligibility
+  checkBenefitEligibility
 } = require("../utils/benefitSchemaEligibility.js");
 class EligibilityService {
   constructor() {} 
@@ -8,10 +8,10 @@ class EligibilityService {
    * Check eligibility for all provided benefit schemas
    * @param {Object} userProfile - User profile data
    * @param {Array} benefits - Array of benefit schemas
-   * @param {Object} customRules - Optional custom rules
+   * @param {Object} eligibilityEvaluationLogic - Optional custom rules
    * @returns {Object} Eligibility results
    */
-  async checkEligibility(userProfile, benefits, strictChecking) {
+  async checkBenefitsEligibility(userProfile, benefits, strictChecking) {
     const results = {
       eligible: [],
       ineligible: [],
@@ -20,12 +20,12 @@ class EligibilityService {
 
     for (const benefit of benefits) {
       try {
-        const customRules = benefit.customRules ?? null;
-        const benefitCrateria = benefit.eligibility;
-          const eligibilityResult = await checkBenefiteligibility( //checkbenefiteligibility
+        const eligibilityEvaluationLogic = benefit.eligibilityEvaluationLogic ?? null;
+        const benefitCriteria = benefit.eligibility;
+          const eligibilityResult = await checkBenefitEligibility(
             userProfile,
-            benefitCrateria,
-            customRules,
+            benefitCriteria,
+            eligibilityEvaluationLogic,
             strictChecking
           );
 
@@ -65,12 +65,12 @@ class EligibilityService {
        
     for (const userProfile of userProfiles) {
         try {
-        const customRules = benefit.customRules ?? null;
-        const benefitCrateria = benefit.eligibility;
-          const eligibilityResult = await checkBenefiteligibility(
+        const eligibilityEvaluationLogic = benefit.eligibilityEvaluationLogic ?? null;
+        const benefitCriteria = benefit.eligibility;
+          const eligibilityResult = await checkBenefitEligibility(
             userProfile,
-            benefitCrateria,
-            customRules,
+            benefitCriteria,
+            eligibilityEvaluationLogic,
             strictChecking
           );
           if (eligibilityResult.isEligible) {

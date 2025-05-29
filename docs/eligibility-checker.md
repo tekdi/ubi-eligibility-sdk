@@ -30,7 +30,7 @@ This functionality allows you to check which benefit schemes a specific user is 
     "caste": "general",
     "income": 250000
   },
-  "benefitSchemas": [
+  "benefitsList": [
     {
       "en": {
         "basicDetails": {
@@ -235,7 +235,7 @@ You can provide custom rules to override standard eligibility checks:
 
 ```json
 {
-  "customRules": {
+  "eligibilityEvaluationLogic": {
     "age": {
       "condition": "custom",
       "rule": "age < 30 && income < 500000"

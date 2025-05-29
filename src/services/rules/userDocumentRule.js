@@ -1,6 +1,7 @@
-const { checkCriterion } = require("../eligibilityUtils");
+const { checkCriteria } = require("../../utils/eligibilityUtils");
+const RuleInterface = require("../interfaces/RuleInterface");
 
-class UserDocumentRule {
+class UserDocumentRule extends RuleInterface {
     async execute(userProfile, criteria, strictCheckingFromQuery) {
         const reasons = [];
         // Use strictChecking from query param if provided, else from criteria
@@ -54,10 +55,10 @@ class UserDocumentRule {
             }
         }
 
-        // Use checkCriterion for other checks (e.g., expiry, etc.)
+        // Use checkCriteria for other checks (e.g., expiry, etc.)
         if (criteria.condition) {
             const docValue = document[criteria.name];
-            const isEligible = await checkCriterion(
+            const isEligible = await checkCriteria(
                 docValue,
                 criteria.condition,
                 criteria.conditionValues
@@ -89,4 +90,4 @@ class UserDocumentRule {
     }
 }
 
-module.exports = { UserDocumentRule };
+module.exports = UserDocumentRule;

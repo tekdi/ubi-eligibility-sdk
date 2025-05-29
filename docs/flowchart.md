@@ -11,11 +11,11 @@ flowchart TD
     D --> E{Check Schema Eligibility}
     E --> F{Process Criteria}
     
-    F -->|Each Criterion| G{Check Criterion}
+    F -->|Each Criteria| G{Check Criteria}
     G -->|Custom Rule| H[Apply Custom Rule]
     G -->|Standard Rule| I[Apply Standard Condition]
     
-    H --> J{Criterion Met?}
+    H --> J{Criteria Met?}
     I --> J
     
     J -->|No| K[Mark as Ineligible]
@@ -44,7 +44,7 @@ flowchart TD
    - Processes all eligibility criteria
 
 2. **Criteria Evaluation**
-   - Checks each criterion individually
+   - Checks each criteria individually
    - Applies either custom or standard rules
    - Marks schema as eligible only if all criteria are met
 

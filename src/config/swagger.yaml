@@ -137,10 +137,10 @@ definitions:
                     - educational
                     - economical
                     - geographical
-                  description: Type of eligibility criterion
+                  description: Type of eligibility criteria
                 description:
                   type: string
-                  description: Description of the eligibility criterion
+                  description: Description of the eligibility criteria
                 criteria:
                   type: object
                   required:
@@ -150,7 +150,7 @@ definitions:
                   properties:
                     name:
                       type: string
-                      description: Name of the criterion
+                      description: Name of the criteria
                     condition:
                       type: string
                       enum:
@@ -204,16 +204,16 @@ paths:
             type: object
             required:
               - userProfile
-              - benefitSchemas
+              - benefitsList
             properties:
               userProfile:
                 $ref: '#/definitions/UserProfile'
-              benefitSchemas:
+              benefitsList:
                 type: array
                 items:
                   $ref: '#/definitions/BenefitSchema'
                 description: List of benefit schemes to check eligibility against
-              customRules:
+              eligibilityEvaluationLogic:
                 type: object
                 additionalProperties: true
                 description: Custom rules to override standard eligibility checks

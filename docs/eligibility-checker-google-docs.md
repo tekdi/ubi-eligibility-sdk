@@ -60,7 +60,7 @@ This functionality allows you to check which benefit schemes a specific user is 
       }
     }
   },
-  "benefitSchemas": [
+  "benefitsList": [
     {
       "id": "scheme-id-1",
       "en": {
@@ -107,7 +107,7 @@ This functionality allows you to check which benefit schemes a specific user is 
       }
     }
   ],
-  "customRules": {
+  "eligibilityEvaluationLogic": {
     "income": {
       "condition": "less than equals",
       "value": "300000"
@@ -325,8 +325,8 @@ This endpoint checks which benefit schemes a user is eligible for.
 
 #### Request Body
 - `userProfile`: Object containing user's profile information
-- `benefitSchemas`: Array of benefit scheme objects to check against
-- `customRules`: Optional object containing custom eligibility rules
+- `benefitsList`: Array of benefit scheme objects to check against
+- `eligibilityEvaluationLogic`: Optional object containing custom eligibility rules
 
 #### Response
 - `eligible`: Array of eligible benefit schemes with details
@@ -386,7 +386,7 @@ You can provide custom rules to override standard eligibility checks:
 
 ```json
 {
-  "customRules": {
+  "eligibilityEvaluationLogic": {
     "age": {
       "condition": "custom",
       "rule": "age < 30 && income < 500000"

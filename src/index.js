@@ -6,6 +6,7 @@ const eligibilityService = require("./services/eligibilityService");
 const swaggerConfig = require("./config/swagger");
 const benefitEligibleSchema = require("./schemas/check-eligibility-schema");
 const userEligibilitySchema = require("./schemas/check-users-eligibility-schema");
+
 // Register plugins
 fastify.register(cors, {
   origin: "*",
@@ -35,7 +36,7 @@ fastify.get(
     schema: {
       tags: ["System"],
       summary: "Health check endpoint",
-      description: "Returns the health status of the API",
+      description: "Returns the health status of Eligibility SDK service",
       response: {
         200: {
           type: "object",
@@ -85,11 +86,12 @@ fastify.post(
   async (request, reply) => {
     try {
       const strictChecking = request.query.strictChecking === "true";
-      const { userProfile, benefitSchemas } = request.body;
+      const { userProfile, benefitsList } = request.body;
+
       // Process eligibility
-      const results = await eligibilityService.checkEligibility(
+      const results = await eligibilityService.checkBenefitsEligibility(
         userProfile,
-        benefitSchemas,
+        benefitsList,
         strictChecking
       );
 

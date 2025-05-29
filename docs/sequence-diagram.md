@@ -10,17 +10,17 @@ sequenceDiagram
     participant V as Validator
 
     C->>S: POST /check-eligibility
-    Note over C,S: Send userProfile & benefitSchemas
+    Note over C,S: Send userProfile & benefitsList
     
     S->>V: Validate Request Body
     V-->>S: Validation Result
     
-    S->>ES: checkEligibility(userProfile, benefitSchemas)
+    S->>ES: checkBenefitsEligibility(userProfile, benefitsList)
     
     loop For each benefit schema
         ES->>ES: checkSchemaEligibility()
-        loop For each criterion
-            ES->>ES: checkCriterion()
+        loop For each criteria
+            ES->>ES: checkCriteria()
             alt Has Custom Rules
                 ES->>ES: applyCustomRule()
             else Standard Rules

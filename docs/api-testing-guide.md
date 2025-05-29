@@ -34,7 +34,7 @@ POST /check-eligibility
     "caste": "general",
     "income": 250000
   },
-  "benefitSchemas": [
+  "benefitsList": [
     {
       "en": {
         "basicDetails": {
@@ -112,7 +112,7 @@ POST /check-eligibility
       }
     }
   ],
-  "customRules": {
+  "eligibilityEvaluationLogic": {
     "age": {
       "condition": "custom",
       "rule": "age < 30 && income < 500000"

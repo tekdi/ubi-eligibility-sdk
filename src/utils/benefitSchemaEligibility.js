@@ -1,13 +1,6 @@
 const vm = require("vm");
-const { UserProfileRule } = require("./rules/userProfileRule");
-const { UserDocumentRule } = require("./rules/userDocumentRule");
 
-const ruleMap = {
-  userProfile: UserProfileRule,
-  userDocument: UserDocumentRule,
-};
-
-async function checkBenefiteligibility(userProfile, benefit,customRules, strictChecking) {
+async function checkBenefitEligibility(userProfile, benefit,eligibilityEvaluationLogic, strictChecking) {
   if (!benefit || !Array.isArray(benefit)) {
     return {
       isEligible: false,
@@ -17,11 +10,13 @@ async function checkBenefiteligibility(userProfile, benefit,customRules, strictC
 
   const reasons = [];
   const evaluationResults = {};
-  const criterionResults = [];
+  const criteriaResults = [];
 
-  for (const criterion of benefit) {
-    const { type, description, criteria } = criterion;
-    const RuleClass = ruleMap[type];
+  for (const condition of benefit) {
+    const { type, description, criteria } = condition;
+    const RuleClassName = type.charAt(0).toUpperCase() + type.slice(1) + 'Rule';
+
+    const RuleClass = require(`../services/rules/${RuleClassName}`);
 
     if (!RuleClass) {
       reasons.push({
@@ -32,17 +27,19 @@ async function checkBenefiteligibility(userProfile, benefit,customRules, strictC
       continue;
     }
 
-  let passed = true;
-let ruleReasons = [];
-const ruleInstance = new RuleClass();
-ruleReasons = await ruleInstance.execute(userProfile, criteria, strictChecking);
-if (ruleReasons.length > 0) {
-  passed = false;
-  reasons.push(...ruleReasons);
-}
-    const ruleKey = criterion.id;
+    let passed = true;
+    let ruleReasons = [];
+    const ruleInstance = new RuleClass();
+    ruleReasons = await ruleInstance.execute(userProfile, criteria, strictChecking);
+
+    if (ruleReasons.length > 0) {
+      passed = false;
+      reasons.push(...ruleReasons);
+    }
+
+    const ruleKey = criteria.id;
     evaluationResults[ruleKey] = passed;
-    criterionResults.push({
+    criteriaResults.push({
       ruleKey,
       passed,
       description,
@@ -50,28 +47,28 @@ if (ruleReasons.length > 0) {
     });
   }
 
-  // If customRules is present, evaluate it
-  if (customRules) {
+  // If eligibilityEvaluationLogic is present, evaluate it
+  if (eligibilityEvaluationLogic) {
     let isEligible = false;
     let customRuleMessage = "";
     try {
-      isEligible = vm.runInNewContext(customRules, evaluationResults);
+      isEligible = vm.runInNewContext(eligibilityEvaluationLogic, evaluationResults);
      
       if (isEligible) {
-        customRuleMessage = `Eligible because custom rule "${customRules}" evaluated to true with: ${JSON.stringify(evaluationResults)}`;
+        customRuleMessage = `Eligible because custom rule "${eligibilityEvaluationLogic}" evaluated to true with: ${JSON.stringify(evaluationResults)}`;
       }
     } catch (err) {
       reasons.push({
-        type: "customRules",
-        reason: `Error evaluating customRules: ${err.message}`,
-        description: customRules,
+        type: "eligibilityEvaluationLogic",
+        reason: `Error evaluating eligibilityEvaluationLogic: ${err.message}`,
+        description: eligibilityEvaluationLogic,
       });
     }
     return {
       isEligible,
       reasons: isEligible ? [customRuleMessage] : reasons,
       evaluationResults,
-      criterionResults,
+      criteriaResults,
     };
   }
 
@@ -80,10 +77,10 @@ if (ruleReasons.length > 0) {
     isEligible: reasons.length === 0,
     reasons: reasons.length > 0 ? reasons : ["Eligible: All criteria passed"],
     evaluationResults,
-    criterionResults,
+    criteriaResults,
   };
 }
 
 module.exports = {
-  checkBenefiteligibility,
+  checkBenefitEligibility,
 };

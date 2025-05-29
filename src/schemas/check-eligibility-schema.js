@@ -41,10 +41,10 @@ const benefitEligibleSchema = {
   description: "Checks if a user is eligible for all available benefit schemes",
   body: {
     type: "object",
-    required: ["userProfile", "benefitSchemas"],
+    required: ["userProfile", "benefitsList"],
     properties: {
       userProfile: userProfileSchema,
-      benefitSchemas: {
+      benefitsList: {
         type: "array",
         items: {
               type: "object",
@@ -74,7 +74,7 @@ const benefitEligibleSchema = {
                   },
                 },
               // },
-        customRules: {
+        eligibilityEvaluationLogic: {
         type: "string",
         additionalProperties: true,
           },

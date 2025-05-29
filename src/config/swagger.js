@@ -61,10 +61,10 @@ const swaggerConfig = {
             "application/json": {
               schema: {
                 type: "object",
-                required: ["userProfile", "benefitSchemas"],
+                required: ["userProfile", "benefitsList"],
                 properties: {
                   userProfile: { $ref: "#/components/schemas/UserProfile" },
-                  benefitSchemas: {
+                  benefitsList: {
                     type: "array",
                     items: { $ref: "#/components/schemas/BenefitSchema" },
                   },

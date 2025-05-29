@@ -1,5 +1,6 @@
-const { checkCriterion } = require("../eligibilityUtils");
-class UserProfileRule {
+const { checkCriteria } = require("../../utils/eligibilityUtils");
+const RuleInterface = require("../interfaces/RuleInterface");
+class UserProfileRule extends RuleInterface {
     async execute(userProfile, criteria, strictCheckingFromQuery) {
         const reasons = [];
         const strictChecking = 
@@ -18,7 +19,7 @@ class UserProfileRule {
             }
             return reasons;
         }
-        const isEligible = await checkCriterion(
+        const isEligible = await checkCriteria(
             value,
             criteria.condition,
             criteria.conditionValues
@@ -38,4 +39,4 @@ class UserProfileRule {
     }
 }
 
-module.exports = { UserProfileRule };
+module.exports = UserProfileRule;
