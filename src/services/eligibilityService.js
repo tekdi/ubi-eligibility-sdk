@@ -1,6 +1,7 @@
 const {
   checkBenefitEligibility
 } = require("../utils/benefitSchemaEligibility.js");
+const logger = require("../utils/logger.js");
 class EligibilityService {
   constructor() {} 
 
@@ -45,6 +46,7 @@ class EligibilityService {
           schemaId: benefit.id || "Unknown",
           error: error.message,
         });
+        logger.error('Error in checkBenefitsEligibility:', error);
       }
     }
     return results;
@@ -91,6 +93,7 @@ class EligibilityService {
           applicationId: userProfile.applicationId || "Unknown",
           error: error.message,
         });
+         logger.error('Error in checkUsersEligibility:', error);
       }
     }
 

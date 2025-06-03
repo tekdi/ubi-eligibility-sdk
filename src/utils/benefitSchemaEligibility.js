@@ -1,5 +1,5 @@
 const vm = require("vm");
-
+const logger = require("../utils/logger");
 async function checkBenefitEligibility(userProfile, benefit,eligibilityEvaluationLogic, strictChecking) {
   if (!benefit || !Array.isArray(benefit)) {
     return {
@@ -63,6 +63,7 @@ async function checkBenefitEligibility(userProfile, benefit,eligibilityEvaluatio
         reason: `Error evaluating eligibilityEvaluationLogic: ${err.message}`,
         description: eligibilityEvaluationLogic,
       });
+       logger.error('Error evaluating eligibilityEvaluationLogic:', err);
     }
     return {
       isEligible,

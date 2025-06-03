@@ -11,15 +11,15 @@ class UserDocumentRule extends RuleInterface {
                 : criteria.strictChecking;
 
         // Extract the document
-        const document = userProfile.documents?.[criteria.documentKey];
+        const document = userProfile.documents?.[criteria.documentType];
 
         // If document is missing
         if (document === undefined || document === null) {
             if (strictChecking) {
                 reasons.push({
                     type: "userDocument",
-                    field: criteria.documentKey,
-                    reason: `Missing required document: ${criteria.documentKey}`,
+                    field: criteria.documentType,
+                    reason: `Missing required document: ${criteria.documentType}`,
                     description: criteria.description || "",
                 });
             }
@@ -31,7 +31,7 @@ class UserDocumentRule extends RuleInterface {
         if (criteria.allowedProofs && !criteria.allowedProofs.includes(document.type)) {
             reasons.push({
                 type: "userDocument",
-                field: criteria.documentKey,
+                field: criteria.documentType,
                 reason: `Document type '${document.type}' not allowed`,
                 description: criteria.description || "",
                 userValue: document.type,

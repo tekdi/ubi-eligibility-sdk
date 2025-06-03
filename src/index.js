@@ -9,8 +9,7 @@ const userEligibilitySchema = require("./schemas/check-users-eligibility-schema"
 
 // Register plugins
 fastify.register(cors, {
-  origin: "*",
-  methods: ["GET", "POST", "PUT", "DELETE"],
+  origin: "*"
 });
 
 // Register Swagger
@@ -81,7 +80,21 @@ fastify.setErrorHandler((error, request, reply) => {
 fastify.post(
   "/check-eligibility",
   {
-    schema: benefitEligibleSchema,
+    schema: {
+      ...benefitEligibleSchema,
+      querystring: {
+        type: "object",
+        properties: {
+          strictChecking: {
+            type: "string",
+            enum: ["true", "false"],
+            default: "false",
+            description: "Enable strict eligibility checking"
+          }
+        },
+        additionalProperties: false
+      }
+    }
   },
   async (request, reply) => {
     try {
@@ -97,7 +110,7 @@ fastify.post(
 
       return results;
     } catch (error) {
-      fastify.log.error(error);
+      request.log.error(error);
       reply.code(500).send({ error: error.message });
     }
   }
@@ -120,7 +133,7 @@ fastify.post(
 
       return results;
     } catch (error) {
-      fastify.log.error(error);
+      request.log.error(error);
       reply.code(400).send({ error: error.message });
     }
   }
