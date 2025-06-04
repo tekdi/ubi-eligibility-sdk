@@ -8,10 +8,10 @@ RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 
 # Copy package files and install
 COPY package*.json ./
-RUN npm install
+RUN npm ci --ignore-scripts
 
 # Copy source code
-COPY . .
+COPY src ./src
 
 # Change ownership and permissions
 RUN chown -R appuser:appgroup /usr/src/app
