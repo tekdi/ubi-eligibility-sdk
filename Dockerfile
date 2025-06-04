@@ -1,20 +1,23 @@
-# Use Node.js LTS version as the base image
 FROM node:18-alpine
 
 # Create app directory
-WORKDIR /app
+WORKDIR /usr/src/app
 
-# Copy package.json and package-lock.json
+# Create a non-root user
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+
+# Copy package files and install
 COPY package*.json ./
-
-# Install dependencies
 RUN npm install
 
 # Copy source code
 COPY . .
 
-# Expose the port the app runs on
-EXPOSE 3011
+# Change ownership and permissions
+RUN chown -R appuser:appgroup /usr/src/app
 
-# Start the application
-CMD ["npm", "start"] 
+# Switch to non-root user
+USER appuser
+
+# Start the app
+CMD ["node", "src/index.js"]
