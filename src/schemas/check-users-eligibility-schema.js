@@ -166,4 +166,4 @@ const userEligibilitySchema = {
   },
 };
 
-module.exports = {userEligibilitySchema, benefitSchema};
+module.exports = { userEligibilitySchema, benefitSchema };

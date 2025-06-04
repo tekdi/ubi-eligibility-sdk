@@ -19,7 +19,7 @@ class RuleInterface {
    * @returns {Promise<Object>}
    */
   async execute(userProfile, criteria, strictCheckingFromQuery) {
-    throw new Error('verify() must be implemented by subclass');
+    throw new Error("verify() must be implemented by subclass");
   }
 }
 

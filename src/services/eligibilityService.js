@@ -1,9 +1,9 @@
 const {
-  checkBenefitEligibility
+  checkBenefitEligibility,
 } = require("../utils/benefitSchemaEligibility.js");
 const logger = require("../utils/logger.js");
 class EligibilityService {
-  constructor() {} 
+  constructor() {}
 
   /**
    * Check eligibility for all provided benefit schemas
@@ -19,34 +19,35 @@ class EligibilityService {
       errors: [],
     };
 
-    for (const benefit of benefits) {
+    for (const benefit of benefits) { // Iterate through each benefit schema
       try {
-        const eligibilityEvaluationLogic = benefit.eligibilityEvaluationLogic ?? null;
-        const benefitCriteria = benefit.eligibility;
-          const eligibilityResult = await checkBenefitEligibility(
-            userProfile,
-            benefitCriteria,
-            eligibilityEvaluationLogic,
-            strictChecking
-          );
+        const eligibilityEvaluationLogic =
+          benefit.eligibilityEvaluationLogic ?? null; // Get custom evaluation logic if provided
+        const benefitCriteria = benefit.eligibility; /// Get eligibility criteria from the benefit schema
+        const eligibilityResult = await checkBenefitEligibility( // Check eligibility using the utility function
+          userProfile,
+          benefitCriteria,
+          eligibilityEvaluationLogic,
+          strictChecking
+        );
 
-          if (eligibilityResult.isEligible) {
-            results.eligible.push({
-              schemaId: benefit.id,
-              details: eligibilityResult
-            });
-          } else {
-            results.ineligible.push({
-              schemaId: benefit.id,
-              details: eligibilityResult
-            });
-          }
+        if (eligibilityResult.isEligible) { // If user is eligible, add to eligible results
+          results.eligible.push({
+            schemaId: benefit.id,
+            details: eligibilityResult,
+          });
+        } else { // If user is ineligible, add to ineligible results
+          results.ineligible.push({
+            schemaId: benefit.id,
+            details: eligibilityResult,
+          });
+        }
       } catch (error) {
-        results.errors.push({
+        results.errors.push({ // If an error occurs, log it and add to errors
           schemaId: benefit.id || "Unknown",
           error: error.message,
         });
-        logger.error('Error in checkBenefitsEligibility:', error);
+        logger.error("Error in checkBenefitsEligibility:", error);
       }
     }
     return results;
@@ -64,36 +65,37 @@ class EligibilityService {
       ineligibleUsers: [],
       errors: [],
     };
-       
-    for (const userProfile of userProfiles) {
-        try {
-        const eligibilityEvaluationLogic = benefit.eligibilityEvaluationLogic ?? null;
-        const benefitCriteria = benefit.eligibility;
-          const eligibilityResult = await checkBenefitEligibility(
-            userProfile,
-            benefitCriteria,
-            eligibilityEvaluationLogic,
-            strictChecking
-          );
-          if (eligibilityResult.isEligible) {
-            results.eligibleUsers.push({
-              applicationId: userProfile.applicationId,
-              name: userProfile.name,
-              details: eligibilityResult
-            });
-          } else {
-            results.ineligibleUsers.push({
-              applicationId: userProfile.applicationId,
-              name: userProfile.name,
-              details: eligibilityResult
-            });
-          }
+
+    for (const userProfile of userProfiles) { // Iterate through each user profile
+      try {
+        const eligibilityEvaluationLogic =
+          benefit.eligibilityEvaluationLogic ?? null; // Get custom evaluation logic if provided
+        const benefitCriteria = benefit.eligibility; // Get eligibility criteria from the benefit schema
+        const eligibilityResult = await checkBenefitEligibility( // Check eligibility using the utility function
+          userProfile,
+          benefitCriteria,
+          eligibilityEvaluationLogic,
+          strictChecking
+        );
+        if (eligibilityResult.isEligible) { // If user is eligible, add to eligible results
+          results.eligibleUsers.push({
+            applicationId: userProfile.applicationId,
+            name: userProfile.name,
+            details: eligibilityResult,
+          });
+        } else { // If user is ineligible, add to ineligible results
+          results.ineligibleUsers.push({
+            applicationId: userProfile.applicationId,
+            name: userProfile.name,
+            details: eligibilityResult,
+          });
+        }
       } catch (error) {
         results.errors.push({
           applicationId: userProfile.applicationId || "Unknown",
           error: error.message,
         });
-         logger.error('Error in checkUsersEligibility:', error);
+        logger.error("Error in checkUsersEligibility:", error);
       }
     }
 

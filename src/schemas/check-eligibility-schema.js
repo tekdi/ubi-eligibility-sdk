@@ -18,18 +18,20 @@ const userProfileSchema = {
     caste: {
       type: "string",
       description: "Caste category",
-      enum: ["sc",        
-    "st",        
-    "obc",      
-    "general",   
-    "ews",       
-    "bc",        
-    "mbc",        
-    "nt",        
-    "vjan",      
-    "dnt",       
-    "sbc",       
-    "other"       ],
+      enum: [
+        "sc",
+        "st",
+        "obc",
+        "general",
+        "ews",
+        "bc",
+        "mbc",
+        "nt",
+        "vjan",
+        "dnt",
+        "sbc",
+        "other",
+      ],
     },
     income: { type: "number", description: "Annual income in INR" },
   },
@@ -47,44 +49,40 @@ const benefitEligibleSchema = {
       benefitsList: {
         type: "array",
         items: {
-              type: "object",
-              required: ["eligibility"],
-              properties: {
-                eligibility: {
-                  type: "array",
-                  items: {
+          type: "object",
+          required: ["eligibility"],
+          properties: {
+            eligibility: {
+              type: "array",
+              items: {
+                type: "object",
+                required: ["id", "type", "description", "criteria"],
+                properties: {
+                  id: { type: "string" },
+                  type: { type: "string" },
+                  description: { type: "string" },
+                  criteria: {
                     type: "object",
-                    required: ["id","type", "description", "criteria"],
+                    required: ["name", "condition", "conditionValues"],
                     properties: {
-                      id: { type: "string" },
-                      type: { type: "string" },
-                      description: { type: "string" },
-                      criteria: {
-                        type: "object",
-                        required: ["name", "condition", "conditionValues"],
-                        properties: {
-                          name: { type: "string" },
-                          condition: { type: "string" },
-                          conditionValues: {
-                            type: ["string", "number", "array"],
-                          },
-                        },
+                      name: { type: "string" },
+                      condition: { type: "string" },
+                      conditionValues: {
+                        type: ["string", "number", "array"],
                       },
                     },
                   },
                 },
-              // },
-        eligibilityEvaluationLogic: {
-        type: "string",
-        additionalProperties: true,
+              },
+            },
+            // },
+            eligibilityEvaluationLogic: {
+              type: "string",
+              additionalProperties: true,
+            },
           },
-          }, 
-           
         },
-      
       },
-      
-    
     },
   },
   response: {
@@ -100,11 +98,11 @@ const benefitEligibleSchema = {
                 type: "string",
                 description: "ID of the eligible benefit scheme",
               },
-                details: {
-        type: "object",
-        description: "Additional eligibility details or messages",
-        additionalProperties: true
-      }
+              details: {
+                type: "object",
+                description: "Additional eligibility details or messages",
+                additionalProperties: true,
+              },
             },
           },
         },
@@ -117,11 +115,11 @@ const benefitEligibleSchema = {
                 type: "string",
                 description: "ID of the ineligible benefit scheme",
               },
-  details: {
-        type: "object",
-        description: "Additional eligibility details or messages",
-        additionalProperties: true
-      }
+              details: {
+                type: "object",
+                description: "Additional eligibility details or messages",
+                additionalProperties: true,
+              },
             },
           },
         },
@@ -160,4 +158,4 @@ const benefitEligibleSchema = {
   },
 };
 
-module.exports = {benefitEligibleSchema, userProfileSchema};
+module.exports = { benefitEligibleSchema, userProfileSchema };

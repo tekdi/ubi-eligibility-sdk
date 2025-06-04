@@ -1,6 +1,12 @@
 require("dotenv").config();
-const {benefitEligibleSchema, userProfileSchema} = require("../schemas/check-eligibility-schema.js");
-const {userEligibilitySchema, benefitSchema} = require("../schemas/check-users-eligibility-schema.js");
+const {
+  benefitEligibleSchema,
+  userProfileSchema,
+} = require("../schemas/check-eligibility-schema.js");
+const {
+  userEligibilitySchema,
+  benefitSchema,
+} = require("../schemas/check-users-eligibility-schema.js");
 const swaggerConfig = {
   openapi: "3.0.0",
   info: {
@@ -126,7 +132,9 @@ const swaggerConfig = {
             description: "Successful response",
             content: {
               "application/json": {
-                schema: { $ref: "#/components/schemas/CheckEligibilityResponse" },
+                schema: {
+                  $ref: "#/components/schemas/CheckEligibilityResponse",
+                },
               },
             },
           },
@@ -134,7 +142,9 @@ const swaggerConfig = {
             description: "Bad request",
             content: {
               "application/json": {
-                  schema: { $ref: "#/components/schemas/CheckEligibilityResponseBad" },
+                schema: {
+                  $ref: "#/components/schemas/CheckEligibilityResponseBad",
+                },
               },
             },
           },

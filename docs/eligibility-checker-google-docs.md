@@ -31,157 +31,163 @@ This functionality allows you to check which benefit schemes a specific user is 
 #### Example Request
 ```json
 {
-  "userProfile": {
-    "name": "John Doe",
-    "gender": "male",
-    "age": 16,
-    "dateOfBirth": "2008-01-01",
-    "caste": "sc",
-    "income": 200000,
-    "class": "10",
-    "previousYearMarks": 75,
-    "state": "Rajasthan",
-    "documents": {
-      "aadhaar": {
-        "type": "aadhaar",
-        "verified": true
-      },
-      "marksheet": {
-        "type": "marksheet",
-        "verified": true
-      },
-      "casteCertificate": {
-        "type": "casteCertificate",
-        "verified": true
-      },
-      "incomeCertificate": {
-        "type": "incomeCertificate",
-        "verified": true
-      }
-    }
-  },
-  "benefitsList": [
-    {
-      "id": "scheme-id-1",
-      "en": {
-        "basicDetails": {
-          "title": "Education Scholarship",
-          "category": "education-and-learning",
-          "subCategory": "scholarship",
-          "tags": ["Scholarship", "Student"],
-          "applicationOpenDate": "2024-01-01",
-          "applicationCloseDate": "2024-12-31"
-        },
-        "benefitContent": {
-          "shortDescription": "Short description of the benefit",
-          "longDescription": "Detailed description of the benefit",
-          "benefits": [
-            {
-              "type": "financial",
-              "title": "Annual Scholarship",
-              "description": "₹50,000 per year"
-            }
-          ],
-          "amount": 50000
-        },
-        "eligibility": [
-          {
-            "type": "personal",
-            "description": "Gender criteria",
-            "criteria": {
-              "name": "gender",
-              "condition": "in",
-              "conditionValues": ["male", "female"]
-            }
-          },
-          {
-            "type": "educational",
-            "description": "Class criteria",
-            "criteria": {
-              "name": "class",
-              "condition": "in",
-              "conditionValues": ["9", "10", "11", "12"]
-            }
-          }
-        ]
-      }
-    }
-  ],
-  "eligibilityEvaluationLogic": {
-    "income": {
-      "condition": "less than equals",
-      "value": "300000"
-    }
-  }
+    "userProfile": {
+        "name": "John Doe",
+        "gender": "male",
+        "age": 16,
+        "dateOfBirth": "2008-01-01",
+        "caste": "sc",
+        "income": 400,
+        "class": "9",
+        "previousYearMarks": 75,
+        "state": "maharashtra"
+    },
+    "benefitsList": [
+        {
+            "id": "ubi-pilot-scholarship-1",
+            "eligibility": [
+                {
+                    "id": "B5",
+                    "type": "userProfile", //userProfile
+                    "description": "Gender of Applicant - both male and female allowed to avail scholarship",
+                    "criteria": {
+                        "name": "gender", // key is field
+                        "condition": "in",
+                        "conditionValues": [
+                            "male",
+                            "female"
+                        ]
+                    }
+                },
+                {
+                    "id": "B4",
+                    "type": "userProfile", // userDocument
+                    "description": "The applicant must be a student studying in Class 9th to Class 12th",
+                    "criteria": {
+                        "name": "class",
+                        "documentKey": "marksheet",
+                        "condition": "in",
+                        "conditionValues": [
+                            "9",
+                            "10",
+                            "11",
+                            "12"
+                        ]
+                    }
+                },
+                {
+                    "type": "userProfile",
+                    "id": "B1",
+                    "description": "The applicant must be from SC or ST or OBC castes",
+                    "criteria": {
+                        "documentKey": "casteCertificate",
+                        "name": "caste",
+                        "condition": "in",
+                        "conditionValues": [
+                            "sc",
+                            "st",
+                            "obc"
+                        ]
+                    }
+                },
+                {
+                    "type": "userProfile",
+                    "id": "B2",
+                    "description": "The Total Annual income of parents/guardians of the applicant must not exceed ₹ 2.50 Lakh per Annum",
+                    "criteria": {
+                        "name": "income",
+                        "documentKey": "incomeCertificate",
+                        "condition": "less than equals",
+                        "conditionValues": "100000"
+                    }
+                },
+                {
+                    "id": "B3",
+                    "type": "userProfile",
+                    "description": "The applicant must be from Rajasthan state",
+                    "criteria": {
+                        "documentKey": "incomeCertificate",
+                        "name": "state",
+                        "condition": "equals",
+                        "conditionValues": "Rajasthan"
+                    }
+                }
+            ],
+            "eligibilityEvaluationLogic": "(B1 && B2) || B3"
+        }
+    ]
 }
 ```
 
 #### Response Format
 ```json
 {
-  "eligible": [
-    {
-      "schemaId": "scheme-id-1",
-      "details": {
-        "title": "Education Scholarship",
-        "category": "education-and-learning",
-        "subCategory": "scholarship",
-        "tags": ["Scholarship", "Student"],
-        "applicationOpenDate": "2024-01-01",
-        "applicationCloseDate": "2024-12-31"
-      },
-      "benefits": {
-        "shortDescription": "Short description of the benefit",
-        "longDescription": "Detailed description of the benefit",
-        "benefits": [
-          {
-            "type": "financial",
-            "title": "Annual Scholarship",
-            "description": "₹50,000 per year"
-          }
-        ],
-        "amount": 50000
-      }
-    }
-  ],
-  "ineligible": [
-    {
-      "schemaId": "scheme-id-2",
-      "details": {
-        "title": "Another Scholarship",
-        "category": "education-and-learning",
-        "subCategory": "scholarship",
-        "tags": ["Scholarship", "Student"],
-        "applicationOpenDate": "2024-01-01",
-        "applicationCloseDate": "2024-12-31"
-      },
-      "reasons": [
+    "eligible": [],
+    "ineligible": [
         {
-          "type": "personal",
-          "field": "age",
-          "reason": "Does not meet personal criteria: Age must be between 18 and 25",
-          "description": "Age must be between 18 and 25",
-          "userValue": 17,
-          "requiredValue": [18, 25],
-          "condition": "between"
-        },
-        {
-          "type": "document",
-          "field": "casteCertificate",
-          "reason": "Missing or invalid document for: Caste Certificate",
-          "description": "Caste Certificate",
-          "requiredDocuments": [
-            {
-              "name": "Caste Certificate",
-              "validity": "1 year",
-              "issuingAuthority": "Tehsildar"
+            "schemaId": "ubi-pilot-scholarship-1",
+            "details": {
+                "isEligible": false,
+                "reasons": [
+                    {
+                        "type": "userProfile",
+                        "field": "state",
+                        "reason": "Does not meet criteria: equals",
+                        "description": "",
+                        "userValue": "maharashtra",
+                        "requiredValue": "Rajasthan",
+                        "condition": "equals"
+                    },
+                    {
+                        "type": "eligibilityEvaluationLogic",
+                        "reason": "Error evaluating eligibilityEvaluationLogic: B1 is not defined",
+                        "description": "(B1 && B2) || B3"
+                    }
+                ],
+                "evaluationResults": {
+                    "undefined": false
+                },
+                "criteriaResults": [
+                    {
+                        "passed": true,
+                        "description": "Gender of Applicant - both male and female allowed to avail scholarship",
+                        "reasons": []
+                    },
+                    {
+                        "passed": true,
+                        "description": "The applicant must be a student studying in Class 9th to Class 12th",
+                        "reasons": []
+                    },
+                    {
+                        "passed": true,
+                        "description": "The applicant must be from SC or ST or OBC castes",
+                        "reasons": []
+                    },
+                    {
+                        "passed": true,
+                        "description": "The Total Annual income of parents/guardians of the applicant must not exceed ₹ 2.50 Lakh per Annum",
+                        "reasons": []
+                    },
+                    {
+                        "passed": false,
+                        "description": "The applicant must be from Rajasthan state",
+                        "reasons": [
+                            {
+                                "type": "userProfile",
+                                "field": "state",
+                                "reason": "Does not meet criteria: equals",
+                                "description": "",
+                                "userValue": "maharashtra",
+                                "requiredValue": "Rajasthan",
+                                "condition": "equals"
+                            }
+                        ]
+                    }
+                ]
             }
-          ]
         }
-      ]
-    }
-  ],
-  "errors": []
+    ],
+    "errors": []
 }
 ```
 
