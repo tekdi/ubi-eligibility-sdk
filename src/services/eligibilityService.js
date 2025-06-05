@@ -3,8 +3,6 @@ const {
 } = require("../utils/benefitSchemaEligibility.js");
 const logger = require("../utils/logger.js");
 class EligibilityService {
-  constructor() {}
-
   /**
    * Check eligibility for all provided benefit schemas
    * @param {Object} userProfile - User profile data
@@ -19,31 +17,36 @@ class EligibilityService {
       errors: [],
     };
 
-    for (const benefit of benefits) { // Iterate through each benefit schema
+    for (const benefit of benefits) {
+      // Iterate through each benefit schema
       try {
         const eligibilityEvaluationLogic =
           benefit.eligibilityEvaluationLogic ?? null; // Get custom evaluation logic if provided
         const benefitCriteria = benefit.eligibility; /// Get eligibility criteria from the benefit schema
-        const eligibilityResult = await checkBenefitEligibility( // Check eligibility using the utility function
+        const eligibilityResult = await checkBenefitEligibility(
+          // Check eligibility using the utility function
           userProfile,
           benefitCriteria,
           eligibilityEvaluationLogic,
           strictChecking
         );
 
-        if (eligibilityResult.isEligible) { // If user is eligible, add to eligible results
+        if (eligibilityResult.isEligible) {
+          // If user is eligible, add to eligible results
           results.eligible.push({
             schemaId: benefit.id,
             details: eligibilityResult,
           });
-        } else { // If user is ineligible, add to ineligible results
+        } else {
+          // If user is ineligible, add to ineligible results
           results.ineligible.push({
             schemaId: benefit.id,
             details: eligibilityResult,
           });
         }
       } catch (error) {
-        results.errors.push({ // If an error occurs, log it and add to errors
+        results.errors.push({
+          // If an error occurs, log it and add to errors
           schemaId: benefit.id || "Unknown",
           error: error.message,
         });
@@ -66,27 +69,31 @@ class EligibilityService {
       errors: [],
     };
 
-    for (const userProfile of userProfiles) { // Iterate through each user profile
+    for (const userProfile of userProfiles) {
+      // Iterate through each user profile
       try {
         const eligibilityEvaluationLogic =
           benefit.eligibilityEvaluationLogic ?? null; // Get custom evaluation logic if provided
         const benefitCriteria = benefit.eligibility; // Get eligibility criteria from the benefit schema
-        const eligibilityResult = await checkBenefitEligibility( // Check eligibility using the utility function
+        const eligibilityResult = await checkBenefitEligibility(
+          // Check eligibility using the utility function
           userProfile,
           benefitCriteria,
           eligibilityEvaluationLogic,
           strictChecking
         );
-        if (eligibilityResult.isEligible) { // If user is eligible, add to eligible results
+        if (eligibilityResult.isEligible) {
+          // If user is eligible, add to eligible results
           results.eligibleUsers.push({
             applicationId: userProfile.applicationId,
-            name: userProfile.name,
+
             details: eligibilityResult,
           });
-        } else { // If user is ineligible, add to ineligible results
+        } else {
+          // If user is ineligible, add to ineligible results
           results.ineligibleUsers.push({
             applicationId: userProfile.applicationId,
-            name: userProfile.name,
+
             details: eligibilityResult,
           });
         }
