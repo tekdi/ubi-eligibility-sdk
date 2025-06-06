@@ -61,7 +61,7 @@ class UserDocumentRule extends RuleInterface {
     // Use checkCriteria for other checks (e.g., expiry, etc.)
     if (criteria.condition) {
       const docValue = document[criteria.name];
-      const isEligible = await checkCriteria( // Check the document value against the criteria condition
+      const isEligible = checkCriteria( // Check the document value against the criteria condition
         docValue,
         criteria.condition,
         criteria.conditionValues

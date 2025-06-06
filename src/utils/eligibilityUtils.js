@@ -32,12 +32,14 @@ async function checkCriteria(userValue, condition, conditionValues) {
     case "less than equals":
     case "less_than_equals":
       return Number(userValue) <= Number(conditionValues);
-    case "between":
+    case "between": {
       if (!Array.isArray(conditionValues) || conditionValues.length !== 2)
         throw new Error("Between condition requires an array of two values");
+
       const [min, max] = conditionValues.map(Number);
       const value = Number(userValue);
       return value >= min && value <= max;
+    }
     default:
       throw new Error(`Unsupported condition: ${conditionStr}`);
   }

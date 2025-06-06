@@ -103,7 +103,7 @@ fastify.post(
       const { userProfile, benefitsList } = request.body;
 
       // process eligibility check using the eligibility service
-      const results = await eligibilityService.checkBenefitsEligibility(
+      const results = eligibilityService.checkBenefitsEligibility(
         userProfile,
         benefitsList,
         strictChecking
@@ -112,7 +112,7 @@ fastify.post(
       return results;
     } catch (error) {
       request.log.error(error);
-      reply.status(error.statusCode || 500).send({
+      reply.status(error.statusCode ?? 500).send({
         error: "Internal Server Error",
         message: error.message,
       });
@@ -132,22 +132,8 @@ fastify.post(
       const { userProfiles, benefitSchema } = request.body; // Extract user profiles and benefit schema from request body
       let benefitCriteria = Array.isArray(benefitSchema?.eligibility) // Check if eligibility criteria is an array
         ? [...benefitSchema.eligibility]
-        : []; 
-      // if (Array.isArray(benefitSchema?.documents)) { // Check if documents are provided in the benefit schema
-      //   for (const doc of benefitSchema.documents) { // Iterate through each document
-      //     benefitCriteria.push({ // Add document criteria to eligibility criteria
-      //       id: doc.id,
-      //       type: "userDocument",
-      //       description: `Required document: ${doc.documentType}`,
-      //       criteria: { // Define criteria for document eligibility
-      //         documentKey: doc.documentType,
-      //         allowedProofs: doc.allowedProofs,
-      //         strictChecking: doc.isRequired === true,
-      //       },
-      //     });
-      //   }
-      // }
-      const results = await eligibilityService.checkUsersEligibility(
+        : [];
+      const results = eligibilityService.checkUsersEligibility(
         userProfiles,
         { ...benefitSchema, eligibility: benefitCriteria }, // Pass the benefit schema with eligibility criteria
         strictChecking
@@ -156,7 +142,7 @@ fastify.post(
       return results;
     } catch (error) {
       request.log.error(error);
-      reply.status(error.statusCode || 500).send({
+      reply.status(error.statusCode ?? 500).send({
         error: "Internal Server Error",
         message: error.message,
       });

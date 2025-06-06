@@ -19,7 +19,7 @@ class UserProfileRule extends RuleInterface {
       }
       return reasons;
     }
-    const isEligible = await checkCriteria( // Check if the user profile meets the criteria
+    const isEligible = checkCriteria( // Check if the user profile meets the criteria
       value, 
       criteria.condition,
       criteria.conditionValues
