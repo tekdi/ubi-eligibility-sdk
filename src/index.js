@@ -114,7 +114,7 @@ fastify.post(
       const { userProfile, benefitsList } = request.body;
 
       // process eligibility check using the eligibility service
-      const results = await eligibilityService.checkBenefitsEligibility(
+      const results = eligibilityService.checkBenefitsEligibility(
         userProfile,
         benefitsList,
         strictChecking
@@ -149,7 +149,7 @@ fastify.post(
       let benefitCriteria = Array.isArray(benefitSchema?.eligibility) 
         ? [...benefitSchema.eligibility]
         : [];
-      const results = await eligibilityService.checkUsersEligibility(
+      const results = eligibilityService.checkUsersEligibility(
         userProfiles,
         // Pass the benefit schema with eligibility criteria
         { ...benefitSchema, eligibility: benefitCriteria }, 
