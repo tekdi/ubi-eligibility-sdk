@@ -4,6 +4,7 @@ const RuleInterface = require("../interfaces/RuleInterface");
 class UserDocumentRule extends RuleInterface {
   async execute(userProfile, criteria, strictCheckingFromQuery) {
     const reasons = [];
+
     // Use strictChecking from query param if provided, else from criteria
     const strictChecking =
       typeof strictCheckingFromQuery === "boolean"
@@ -23,6 +24,7 @@ class UserDocumentRule extends RuleInterface {
           description: criteria.description || "",
         });
       }
+
       // If not strict, missing document is considered eligible (skip further checks)
       return reasons;
     }
@@ -61,7 +63,9 @@ class UserDocumentRule extends RuleInterface {
     // Use checkCriteria for other checks (e.g., expiry, etc.)
     if (criteria.condition) {
       const docValue = document[criteria.name];
-      const isEligible = checkCriteria( // Check the document value against the criteria condition
+
+      // Check the document value against the criteria condition
+      const isEligible = checkCriteria( 
         docValue,
         criteria.condition,
         criteria.conditionValues
@@ -82,7 +86,8 @@ class UserDocumentRule extends RuleInterface {
     return reasons;
   }
 
-  static async validateDocument(document) { // Static method to validate the document
+  // Static method to validate the document
+  static async validateDocument(document) { 
     try {
       return document.verified === true;
     } catch (error) {

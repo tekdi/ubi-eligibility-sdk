@@ -58,12 +58,15 @@ fastify.get(
 fastify.setErrorHandler((error, request, reply) => {
   if (error.validation) {
     // This is a validation error (400)
-    request.log.error( // Log the error with validation details
+
+    // Log the error with validation details
+    request.log.error(
       { validation: error.validation },
       "Schema validation failed"
     );
 
-    return reply.status(400).send({ /// Send a 400 Bad Request response
+    // Send a 400 Bad Request response
+    return reply.status(400).send({ 
       error: "Bad Request",
       message: error.message,
       details: error.validation,
@@ -78,11 +81,15 @@ fastify.setErrorHandler((error, request, reply) => {
 
 // Main eligibility check endpoint
 fastify.post(
-  "/check-eligibility", // beneficiary eligibility endpoint
+   // beneficiary eligibility endpoint
+  "/check-eligibility",
   {
     schema: { 
-      ...benefitEligibleSchema, // Importing the schema for eligibility check
-      querystring: { // Query parameters for strict checking
+      // Importing the schema for eligibility check// Importing the schema for eligibility check
+      ...benefitEligibleSchema, 
+
+      // Query parameters for strict checking
+      querystring: { 
         type: "object",
         properties: {
           strictChecking: {
@@ -92,13 +99,17 @@ fastify.post(
             description: "Enable strict eligibility checking",
           },
         },
-        additionalProperties: false, /// Prevent additional properties in query string
+
+        // Prevent additional properties in query string
+        additionalProperties: false, 
       },
     },
   },
   async (request, reply) => {
     try {
-      const strictChecking = request.query.strictChecking === "true"; // Convert query parameter to boolean
+      // Convert query parameter to boolean
+      const strictChecking = request.query.strictChecking === "true"; 
+
       // Extract user profile and benefits list from request body
       const { userProfile, benefitsList } = request.body;
 
@@ -128,14 +139,20 @@ fastify.post(
   },
   async (request, reply) => {
     try {
-      const strictChecking = request.query.strictChecking === "true"; // Convert query parameter to boolean
-      const { userProfiles, benefitSchema } = request.body; // Extract user profiles and benefit schema from request body
-      let benefitCriteria = Array.isArray(benefitSchema?.eligibility) // Check if eligibility criteria is an array
+      // Convert query parameter to boolean
+      const strictChecking = request.query.strictChecking === "true"; 
+
+      // Extract user profiles and benefit schema from request body
+      const { userProfiles, benefitSchema } = request.body; 
+
+      // Check if eligibility criteria is an array
+      let benefitCriteria = Array.isArray(benefitSchema?.eligibility) 
         ? [...benefitSchema.eligibility]
         : [];
       const results = eligibilityService.checkUsersEligibility(
         userProfiles,
-        { ...benefitSchema, eligibility: benefitCriteria }, // Pass the benefit schema with eligibility criteria
+        // Pass the benefit schema with eligibility criteria
+        { ...benefitSchema, eligibility: benefitCriteria }, 
         strictChecking
       );
 
