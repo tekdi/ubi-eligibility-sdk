@@ -126,11 +126,12 @@ class UserProfileRule extends RuleInterface {
     }
     
     // Check if the user profile meets the criteria
-    const isEligible = checkCriteria(
+    const isEligible = await checkCriteria(
       value, 
       criteria.condition,
       criteria.conditionValues
     );
+
     if (!isEligible) {
       reasons.push({
         type: "userProfile",

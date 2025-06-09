@@ -76,37 +76,42 @@ async function checkCriteria(userValue, condition, conditionValues) {
   const valueType = detectType(conditionValues);
   const convertedUserValue = convertToType(userValue, valueType);
   const convertedConditionValue = convertToType(conditionValues, valueType);
-
   switch (conditionStr) {
     case "equals":
     case "equal":
     case "=":
     case "==":
       return convertedUserValue === convertedConditionValue;
+
     case "in":
     case "includes":
       return (
         Array.isArray(conditionValues) && 
         conditionValues.map(v => convertToType(v, valueType)).includes(convertedUserValue)
       );
+
     case "greaterthanequals":
     case "greaterthanequal":
     case "gte":
     case ">=":
       return convertedUserValue >= convertedConditionValue;
+
     case "lessthanequals":
     case "lessthanequal":
     case "lte":
     case "<=":
       return convertedUserValue <= convertedConditionValue;
+
     case "greaterthan":
     case "gt":
     case ">":
       return convertedUserValue > convertedConditionValue;
+
     case "lessthan":
     case "lt":
     case "<":
       return convertedUserValue < convertedConditionValue;
+
     case "between": {
       if (!Array.isArray(conditionValues) || conditionValues.length !== 2)
         throw new Error("Between condition requires an array of two values");
@@ -114,6 +119,7 @@ async function checkCriteria(userValue, condition, conditionValues) {
       const [min, max] = conditionValues.map(v => convertToType(v, valueType));
       return convertedUserValue >= min && convertedUserValue <= max;
     }
+
     default:
       throw new Error(`Unsupported condition: ${conditionStr}`);
   }
