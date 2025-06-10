@@ -1,0 +1,116 @@
+{
+	"info": {
+		"_postman_id": "69e79685-81b6-40d7-acc6-e0aafdd3953b",
+		"name": "Benefit Eligibility API",
+		"description": "Collection for testing the Benefit Eligibility API endpoints",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "44525773"
+	},
+	"item": [
+		{
+			"name": "Health Check",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:3000/health",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"health"
+					]
+				},
+				"description": "Check if the API is running and healthy"
+			},
+			"response": []
+		},
+		{
+			"name": "Check Eligibility for Schemes",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"userProfile\": {\n        \"name\": \"John Doe\",\n        \"gender\": \"male\",\n        \"age\": 16,\n        \"dateOfBirth\": \"2008-01-01\",\n        \"caste\": \"sc\",\n        \"income\": 200000,\n        \"class\": \"8\",\n        \"previousYearMarks\": 75,\n        \"state\": \"Rajasthan\",\n        \"documents\": {\n            \"aadhaar\": {\n                \"type\": \"aadhaar\",\n                \"verified\": true\n            },\n            \"marksheet\": {\n                \"type\": \"marksheet\",\n                \"verified\": true\n            },\n            \"casteCertificate\": {\n                \"type\": \"casteCertificate\",\n                \"verified\": true\n            },\n            \"incomeCertificate\": {\n                \"type\": \"incomeCertificate\",\n                \"verified\": true\n            }\n        }\n    },\n    \"benefitSchemas\": [\n        {\n            \"id\": \"ubi-pilot-scholarship-1\",\n            \"en\": {\n                \"eligibility\": [\n                    {\n                        \"type\": \"personal\",\n                        \"description\": \"Gender of Applicant - both male and female allowed to avail scholarship\",\n                        \"criteria\": {\n                            \"name\": \"gender\",\n                            \"condition\": \"in\",\n                            \"conditionValues\": [\n                                \"male\",\n                                \"female\"\n                            ]\n                        }\n                    },\n                    {\n                        \"type\": \"educational\",\n                        \"description\": \"The applicant must be a student studying in Class 9th to Class 12th\",\n                        \"criteria\": {\n                            \"name\": \"class\",\n                            \"condition\": \"in\",\n                            \"conditionValues\": [\n                                \"9\",\n                                \"10\",\n                                \"11\",\n                                \"12\"\n                            ]\n                        }\n                    },\n                    {\n                        \"type\": \"personal\",\n                        \"description\": \"The applicant must be from SC or ST or OBC castes\",\n                        \"criteria\": {\n                            \"name\": \"caste\",\n                            \"condition\": \"in\",\n                            \"conditionValues\": [\n                                \"sc\",\n                                \"st\",\n                                \"obc\"\n                            ]\n                        }\n                    },\n                    {\n                        \"type\": \"economical\",\n                        \"description\": \"The Total Annual income of parents/guardians of the applicant must not exceed ₹ 2.50 Lakh per Annum\",\n                        \"criteria\": {\n                            \"name\": \"income\",\n                            \"condition\": \"less than equals\",\n                            \"conditionValues\": \"250000\"\n                        }\n                    },\n                    {\n                        \"type\": \"geographical\",\n                        \"description\": \"The applicant must be from Rajasthan state\",\n                        \"criteria\": {\n                            \"name\": \"state\",\n                            \"condition\": \"equals\",\n                            \"conditionValues\": \"Rajasthan\"\n                        }\n                    }\n                ]\n            }\n        }\n    ],\n    \"customRules\": {\n        \"income\": {\n            \"condition\": \"less than equals\",\n            \"value\": \"300000\"\n        }\n    }\n}"
+				},
+				"url": {
+					"raw": "http://localhost:3000/check-eligibility",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"check-eligibility"
+					]
+				},
+				"description": "Check which benefit schemes a user is eligible for"
+			},
+			"response": []
+		},
+		{
+			"name": "Check Users for Scheme",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"userProfiles\": [\n        {\n            \"name\": \"Rahul Sharma\",\n            \"applicationId\": \"23\",\n            \"gender\": \"male\",\n            \"age\": 16,\n            \"dateOfBirth\": \"2008-05-15\",\n            \"caste\": \"sc\",\n            \"state\": \"Rajasthan\",\n            \"class\": \"10\",\n            \"previousYearMarks\": 85,\n            \"income\": 180000,\n            \"documents\": {\n                \"janAadharCertificate\": {\n                    \"type\": \"janAadharCertificate\",\n                    \"verified\": true\n                },\n                \"aadhaar\": {\n                    \"type\": \"aadhaar\",\n                    \"verified\": true\n                },\n                \"marksheet\": {\n                    \"type\": \"marksheet\",\n                    \"verified\": true\n                },\n                \"enrollmentCertificate\": {\n                    \"type\": \"enrollmentCertificate\",\n                    \"verified\": true\n                },\n                \"casteCertificate\": {\n                    \"type\": \"casteCertificate\",\n                    \"verified\": true\n                },\n                \"incomeCertificate\": {\n                    \"type\": \"incomeCertificate\",\n                    \"verified\": true\n                }\n            }\n        }\n    ],\n    \"benefitSchema\": {\n        \"id\": \"ubi-pilot-scholarship-1\",\n        \"en\": {\n            \"eligibility\": [\n                {\n                    \"type\": \"personal\",\n                    \"description\": \"Gender of Applicant - both male and female allowed to avail scholarship\",\n                    \"criteria\": {\n                        \"name\": \"gender\",\n                        \"condition\": \"in\",\n                        \"conditionValues\": [\n                            \"male\",\n                            \"female\"\n                        ]\n                    },\n                    \"allowedProofs\": [\n                        \"aadhaar\"\n                    ]\n                },\n                {\n                    \"type\": \"educational\",\n                    \"description\": \"The applicant must be a student studying in Class 9th to Class 12th\",\n                    \"criteria\": {\n                        \"name\": \"class\",\n                        \"condition\": \"in\",\n                        \"conditionValues\": [\n                            \"9\",\n                            \"10\",\n                            \"11\",\n                            \"12\"\n                        ]\n                    },\n                    \"allowedProofs\": [\n                        \"enrollmentCertificate\"\n                    ]\n                },\n                {\n                    \"type\": \"personal\",\n                    \"description\": \"The applicant must be from SC or ST or OBC castes\",\n                    \"criteria\": {\n                        \"name\": \"caste\",\n                        \"condition\": \"in\",\n                        \"conditionValues\": [\n                            \"sc\",\n                            \"st\",\n                            \"obc\"\n                        ]\n                    },\n                    \"allowedProofs\": [\n                        \"casteCertificate\"\n                    ]\n                },\n                {\n                    \"type\": \"economical\",\n                    \"description\": \"The Total Annual income of parents/guardians of the applicant must not exceed ₹ 2.50 Lakh per Annum\",\n                    \"criteria\": {\n                        \"name\": \"income\",\n                        \"condition\": \"less than equals\",\n                        \"conditionValues\": \"250000\"\n                    },\n                    \"allowedProofs\": [\n                        \"incomeCertificate\"\n                    ]\n                },\n                {\n                    \"type\": \"geographical\",\n                    \"description\": \"The applicant must be from Rajasthan state\",\n                    \"criteria\": {\n                        \"name\": \"state\",\n                        \"condition\": \"equals\",\n                        \"conditionValues\": \"Rajasthan\"\n                    },\n                    \"allowedProofs\": [\n                        \"janAadharCertificate\"\n                    ]\n                }\n            ]\n        }\n    }\n}"
+				},
+				"url": {
+					"raw": "http://localhost:3000/check-users-eligibility",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"check-users-eligibility"
+					]
+				},
+				"description": "Check which users are eligible for a specific benefit scheme"
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:3000",
+			"type": "string"
+		}
+	]
+}
