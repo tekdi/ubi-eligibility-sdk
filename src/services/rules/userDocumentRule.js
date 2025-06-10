@@ -149,7 +149,7 @@ class UserDocumentRule extends RuleInterface {
               reason: `Invalid or unverified document`,
               description: criteria.description || "",
             });
-            return reasons;
+            return Promise.resolve(reasons);
           }
 
           // Use checkCriteria for other checks (e.g., expiry, etc.)
@@ -171,10 +171,10 @@ class UserDocumentRule extends RuleInterface {
                   condition: criteria.condition,
                 });
               }
-              return reasons;
+              return Promise.resolve(reasons);
             });
           }
-          return reasons;
+          return Promise.resolve(reasons);
         })
         .catch(error => {
           reasons.push({
@@ -183,7 +183,7 @@ class UserDocumentRule extends RuleInterface {
             reason: `Error processing document: ${error.message}`,
             description: criteria.description || "",
           });
-          return reasons;
+          return Promise.resolve(reasons);
         });
     }
 
@@ -206,7 +206,7 @@ class UserDocumentRule extends RuleInterface {
             condition: criteria.condition,
           });
         }
-        return reasons;
+        return Promise.resolve(reasons);
       }).catch(error => {
         reasons.push({
           type: "userDocument",
@@ -214,7 +214,7 @@ class UserDocumentRule extends RuleInterface {
           reason: `Error processing document: ${error.message}`,
           description: criteria.description || "",
         });
-        return reasons;
+        return Promise.resolve(reasons);
       });
     }
 
