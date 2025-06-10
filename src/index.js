@@ -50,7 +50,7 @@ fastify.get(
       },
     },
   },
-  async (request, reply) => {
+  (request, reply) => {
     return { status: "ok" };
   }
 );
@@ -58,14 +58,11 @@ fastify.get(
 fastify.setErrorHandler((error, request, reply) => {
   if (error.validation) {
     // This is a validation error (400)
-
-    // Log the error with validation details
     request.log.error(
       { validation: error.validation },
       "Schema validation failed"
     );
 
-    // Send a 400 Bad Request response
     return reply.status(400).send({ 
       error: "Bad Request",
       message: error.message,
@@ -73,7 +70,7 @@ fastify.setErrorHandler((error, request, reply) => {
     });
   }
   request.log.error(error);
-  reply.status(error.statusCode || 500).send({ 
+  return reply.status(error.statusCode || 500).send({ 
     error: "Internal Server Error",
     message: error.message,
   });
@@ -81,14 +78,10 @@ fastify.setErrorHandler((error, request, reply) => {
 
 // Main eligibility check endpoint
 fastify.post(
-   // beneficiary eligibility endpoint
   "/check-eligibility",
   {
     schema: { 
-      // Importing the schema for eligibility check// Importing the schema for eligibility check
-      ...benefitEligibleSchema, 
-
-      // Query parameters for strict checking
+      ...benefitEligibleSchema,
       querystring: { 
         type: "object",
         properties: {
@@ -99,35 +92,25 @@ fastify.post(
             description: "Enable strict eligibility checking",
           },
         },
-
-        // Prevent additional properties in query string
         additionalProperties: false, 
       },
     },
   },
-  async (request, reply) => {
-    try {
-      // Convert query parameter to boolean
-      const strictChecking = request.query.strictChecking === "true"; 
+  (request, reply) => {
+    const strictChecking = request.query.strictChecking === "true";
+    const { userProfile, benefitsList } = request.body;
 
-      // Extract user profile and benefits list from request body
-      const { userProfile, benefitsList } = request.body;
-
-      // process eligibility check using the eligibility service
-      const results = eligibilityService.checkBenefitsEligibility(
-        userProfile,
-        benefitsList,
-        strictChecking
-      );
-
-      return results;
-    } catch (error) {
+    return eligibilityService.checkBenefitsEligibility(
+      userProfile,
+      benefitsList,
+      strictChecking
+    ).catch(error => {
       request.log.error(error);
-      reply.status(error.statusCode ?? 500).send({
+      return reply.status(error.statusCode ?? 500).send({
         error: "Internal Server Error",
         message: error.message,
       });
-    }
+    });
   }
 );
 
@@ -137,48 +120,42 @@ fastify.post(
   {
     schema: userEligibilitySchema,
   },
-  async (request, reply) => {
-    try {
-      // Convert query parameter to boolean
-      const strictChecking = request.query.strictChecking === "true"; 
+  (request, reply) => {
+    const strictChecking = request.query.strictChecking === "true";
+    const { userProfiles, benefitSchema } = request.body;
 
-      // Extract user profiles and benefit schema from request body
-      const { userProfiles, benefitSchema } = request.body; 
+    // Check if eligibility criteria is an array
+    const benefitCriteria = Array.isArray(benefitSchema?.eligibility) 
+      ? [...benefitSchema.eligibility]
+      : [];
 
-      // Check if eligibility criteria is an array
-      let benefitCriteria = Array.isArray(benefitSchema?.eligibility) 
-        ? [...benefitSchema.eligibility]
-        : [];
-      const results = eligibilityService.checkUsersEligibility(
-        userProfiles,
-        // Pass the benefit schema with eligibility criteria
-        { ...benefitSchema, eligibility: benefitCriteria }, 
-        strictChecking
-      );
-
-      return results;
-    } catch (error) {
+    return eligibilityService.checkUsersEligibility(
+      userProfiles,
+      { ...benefitSchema, eligibility: benefitCriteria },
+      strictChecking
+    ).catch(error => {
       request.log.error(error);
-      reply.status(error.statusCode ?? 500).send({
+      return reply.status(error.statusCode ?? 500).send({
         error: "Internal Server Error",
         message: error.message,
       });
-    }
+    });
   }
 );
 
 // Start server
-const start = async () => {
-  try {
-    const port = process.env.PORT || 3000;
-    await fastify.ready();
-    await fastify.listen({ port: port, host: "localhost" });
-    fastify.log.info(`Server is running on ${fastify.server.address().port}`);
-  } catch (error) {
-    // 'request' is not available here, so use fastify.log.error instead
-    fastify.log.error(error);
-    process.exit(1);
-  }
+const start = () => {
+  const port = process.env.PORT || 3000;
+  
+  return fastify.ready()
+    .then(() => fastify.listen({ port: port, host: "localhost" }))
+    .then(() => {
+      fastify.log.info(`Server is running on ${fastify.server.address().port}`);
+    })
+    .catch(error => {
+      fastify.log.error(error);
+      process.exit(1);
+    });
 };
 
 start();

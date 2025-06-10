@@ -101,15 +101,14 @@ const RuleInterface = require("../interfaces/RuleInterface");
  * [] // Empty array means all criteria passed
  */
 class UserProfileRule extends RuleInterface {
-  // add bigger comments with examples
-  async execute(userProfile, criteria, strictCheckingFromQuery) {
+  execute(userProfile, criteria, strictCheckingFromQuery) {
     const reasons = [];
 
     // Use strictChecking from query param if provided, else from criteria
     const strictChecking =
       typeof strictCheckingFromQuery === "boolean"
         ? strictCheckingFromQuery
-        : criteria.strictChecking; 
+        : criteria.strictChecking;
 
     // Extract the value from userProfile based on criteria name
     const value = userProfile[criteria.name];
@@ -122,28 +121,35 @@ class UserProfileRule extends RuleInterface {
           description: criteria.description || "",
         });
       }
-      return reasons;
+      return Promise.resolve(reasons);
     }
-    
-    // Check if the user profile meets the criteria
-    const isEligible = await checkCriteria(
-      value, 
+
+    return checkCriteria(
+      value,
       criteria.condition,
       criteria.conditionValues
-    );
-
-    if (!isEligible) {
+    ).then(isEligible => {
+      if (!isEligible) {
+        reasons.push({
+          type: "userProfile",
+          field: criteria.name,
+          reason: `Does not meet criteria: ${criteria.condition}`,
+          description: criteria.description || "",
+          userValue: value,
+          requiredValue: criteria.conditionValues,
+          condition: criteria.condition,
+        });
+      }
+      return reasons;
+    }).catch(error => {
       reasons.push({
         type: "userProfile",
         field: criteria.name,
-        reason: `Does not meet criteria: ${criteria.condition}`,
+        reason: `Error checking criteria: ${error.message}`,
         description: criteria.description || "",
-        userValue: value,
-        requiredValue: criteria.conditionValues,
-        condition: criteria.condition,
       });
-    }
-    return reasons;
+      return reasons;
+    });
   }
 }
 

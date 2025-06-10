@@ -7,7 +7,7 @@ const logger = require("../utils/logger");
  * @param {Array} benefit - Array of eligibility conditions
  * @param {string} eligibilityEvaluationLogic - Optional custom evaluation logic
  * @param {boolean} strictChecking - Whether to perform strict checking
- * @returns {Object} Eligibility result with reasons and evaluation details
+ * @returns {Promise<Object>} Eligibility result with reasons and evaluation details
  * @example
  * // Example user profile
  * const userProfile = {
@@ -149,109 +149,112 @@ const logger = require("../utils/logger");
  *     ]
  * }
  */
-async function checkBenefitEligibility(
+function checkBenefitEligibility(
   userProfile,
   benefit,
   eligibilityEvaluationLogic,
   strictChecking
 ) {
-
   // Check if benefit is defined and is an array
   if (!benefit || !Array.isArray(benefit)) { 
-    return {
+    return Promise.resolve({
       isEligible: false,
       reasons: ["No eligibility criteria defined in benefit"],
-    };
+    });
   }
 
   const reasons = [];
   const evaluationResults = {};
   const criteriaResults = [];
 
-  for (const condition of benefit) {
-    const { type, description, criteria } = condition;
+  // Process all conditions sequentially
+  return benefit.reduce((promiseChain, condition) => {
+    return promiseChain.then(async () => {
+      const { type, description, criteria } = condition;
 
-    // Convert type to RuleClassName (e.g., "age" to "AgeRule")
-    const RuleClassName = type.charAt(0).toUpperCase() + type.slice(1) + "Rule"; 
+      // Convert type to RuleClassName (e.g., "age" to "AgeRule")
+      const RuleClassName = type.charAt(0).toUpperCase() + type.slice(1) + "Rule"; 
 
-    // Dynamically require the rule class based on type
-    const RuleClass = require(`../services/rules/${RuleClassName}`); 
+      // Dynamically require the rule class based on type
+      const RuleClass = require(`../services/rules/${RuleClassName}`); 
 
-     // If no rule class is found, log the reason and continue
-    if (!RuleClass) {
-      reasons.push({
-        type,
-        reason: `No rule class found for type: ${type}`,
-        description,
-      });
-      continue;
-    }
+      // If no rule class is found, log the reason and continue
+      if (!RuleClass) {
+        reasons.push({
+          type,
+          reason: `No rule class found for type: ${type}`,
+          description,
+        });
+        return;
+      }
 
-    let passed = true;
-    let ruleReasons = [];
-    const ruleInstance = new RuleClass();
+      let passed = true;
+      let ruleReasons = [];
+      const ruleInstance = new RuleClass();
 
-    // Execute the rule criteria
-    ruleReasons = await ruleInstance.execute( 
-      userProfile,
-      criteria,
-      strictChecking
-    );
-
-    // If ruleReasons are present, it means the rule did not pass
-    if (ruleReasons.length > 0) { 
-      passed = false;
-      reasons.push(...ruleReasons);
-    }
-
-    // Use criteria.id as the key for evaluation results
-    const ruleKey = criteria.name;
-    evaluationResults[ruleKey] = passed;
-    criteriaResults.push({
-      ruleKey,
-      passed,
-      description,
-      reasons: ruleReasons,
-    });
-  }
-
-  // If eligibilityEvaluationLogic is present, evaluate it
-  if (eligibilityEvaluationLogic) {
-    let isEligible = false;
-    let customRuleMessage = "";
-    try {
-      // Use vm to safely evaluate the eligibility logic
-      isEligible = vm.runInNewContext( 
-        eligibilityEvaluationLogic,
-        evaluationResults
+      // Execute the rule criteria
+      ruleReasons = await ruleInstance.execute( 
+        userProfile,
+        criteria,
+        strictChecking
       );
 
-      if (isEligible) {
-        customRuleMessage = `Eligible because custom rule "${eligibilityEvaluationLogic}" evaluated to true with: ${JSON.stringify(evaluationResults)}`;
+      // If ruleReasons are present, it means the rule did not pass
+      if (ruleReasons.length > 0) { 
+        passed = false;
+        reasons.push(...ruleReasons);
       }
-    } catch (err) {
-      reasons.push({
-        type: "eligibilityEvaluationLogic",
-        reason: `Error evaluating eligibilityEvaluationLogic: ${err.message}`,
-        description: eligibilityEvaluationLogic,
+
+      // Use criteria.id as the key for evaluation results
+      const ruleKey = criteria.name;
+      evaluationResults[ruleKey] = passed;
+      criteriaResults.push({
+        ruleKey,
+        passed,
+        description,
+        reasons: ruleReasons,
       });
-      logger.error("Error evaluating eligibilityEvaluationLogic:", err);
+    });
+  }, Promise.resolve())
+  .then(() => {
+    // If eligibilityEvaluationLogic is present, evaluate it
+    if (eligibilityEvaluationLogic) {
+      let isEligible = false;
+      let customRuleMessage = "";
+      try {
+        // Use vm to safely evaluate the eligibility logic
+        isEligible = vm.runInNewContext( 
+          eligibilityEvaluationLogic,
+          evaluationResults
+        );
+
+        if (isEligible) {
+          customRuleMessage = `Eligible because custom rule "${eligibilityEvaluationLogic}" evaluated to true with: ${JSON.stringify(evaluationResults)}`;
+        }
+      } catch (err) {
+        reasons.push({
+          type: "eligibilityEvaluationLogic",
+          reason: `Error evaluating eligibilityEvaluationLogic: ${err.message}`,
+          description: eligibilityEvaluationLogic,
+        });
+        logger.error("Error evaluating eligibilityEvaluationLogic:", err);
+      }
+      return {
+        isEligible,
+        reasons: isEligible ? [customRuleMessage] : reasons,
+        evaluationResults,
+        criteriaResults,
+      };
     }
+
+    // Default: eligible if no reasons
     return {
-      isEligible,
-      reasons: isEligible ? [customRuleMessage] : reasons,
+      isEligible: reasons.length === 0,
+      reasons: reasons.length > 0 ? reasons : ["Eligible: All criteria passed"],
       evaluationResults,
       criteriaResults,
     };
-  }
-
-  // Default: eligible if no reasons
-  return {
-    isEligible: reasons.length === 0,
-    reasons: reasons.length > 0 ? reasons : ["Eligible: All criteria passed"],
-    evaluationResults,
-    criteriaResults,
-  };
+  });
 }
 
 module.exports = {
