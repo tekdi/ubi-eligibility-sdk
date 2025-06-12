@@ -148,7 +148,7 @@ const start = () => {
   const port = process.env.PORT || 3000;
   
   return fastify.ready()
-    .then(() => fastify.listen({ port: port, host: "localhost" }))
+    .then(() => fastify.listen({ port: port, host: "0.0.0.0" }))
     .then(() => {
       fastify.log.info(`Server is running on ${fastify.server.address().port}`);
     })
