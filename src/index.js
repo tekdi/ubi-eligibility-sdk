@@ -145,7 +145,7 @@ fastify.post(
 
 // Start server
 const start = () => {
-  const port = process.env.PORT || 3000;
+  const port = process.env.PORT || 3011;
   
   return fastify.ready()
     .then(() => fastify.listen({ port: port, host: "0.0.0.0" }))

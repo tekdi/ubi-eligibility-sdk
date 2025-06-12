@@ -173,8 +173,7 @@ function checkBenefitEligibility(
       const { type, description, criteria } = condition;
 
       // Convert type to RuleClassName (e.g., "age" to "AgeRule")
-     // const RuleClassName = type.charAt(0).toUpperCase() + type.slice(1) + "Rule"; 
-      const RuleClassName = type.toLowerCase() + "Rule";
+      const RuleClassName = type  + "Rule"; 
 
       // Dynamically require the rule class based on type
       const RuleClass = require(`../services/rules/${RuleClassName}`); 
