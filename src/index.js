@@ -145,14 +145,10 @@ fastify.post(
 
 // Start server
 const start = () => {
-  const port = process.env.PORT || 3000;
+  const port = process.env.PORT || 3011;
   
   return fastify.ready()
-<<<<<<< HEAD
-    .then(() => fastify.listen({ port: port, host: "localhost" }))
-=======
     .then(() => fastify.listen({ port: port, host: "0.0.0.0" }))
->>>>>>> ae5fd28ca59bda231372b25467014a17a8024b38
     .then(() => {
       fastify.log.info(`Server is running on ${fastify.server.address().port}`);
     })
