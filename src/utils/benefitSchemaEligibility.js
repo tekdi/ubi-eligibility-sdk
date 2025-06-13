@@ -155,6 +155,8 @@ function checkBenefitEligibility(
   eligibilityEvaluationLogic,
   strictChecking
 ) {
+  // Ensure strictChecking is a boolean
+  const isStrictChecking = Boolean(strictChecking);
   // Check if benefit is defined and is an array
   if (!benefit || !Array.isArray(benefit)) { 
     return Promise.resolve({
@@ -174,7 +176,7 @@ function checkBenefitEligibility(
 
       // Convert type to RuleClassName (e.g., "age" to "AgeRule")
      // const RuleClassName = type.charAt(0).toUpperCase() + type.slice(1) + "Rule"; 
-      const RuleClassName = type.toLowerCase() + "Rule";
+     const RuleClassName = type  + "Rule"; 
 
       // Dynamically require the rule class based on type
       const RuleClass = require(`../services/rules/${RuleClassName}`); 
@@ -197,7 +199,7 @@ function checkBenefitEligibility(
       ruleReasons = await ruleInstance.execute( 
         userProfile,
         criteria,
-        strictChecking
+        isStrictChecking
       );
 
       // If ruleReasons are present, it means the rule did not pass

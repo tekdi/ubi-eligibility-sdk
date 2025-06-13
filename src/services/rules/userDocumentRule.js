@@ -100,16 +100,15 @@ class UserDocumentRule extends RuleInterface {
     const reasons = [];
 
     // Use strictChecking from query param if provided, else from criteria
-    const strictChecking =
-      typeof strictCheckingFromQuery === "boolean"
-        ? strictCheckingFromQuery
-        : criteria.strictChecking;
+    const strictChecking = typeof strictCheckingFromQuery === 'boolean'
+      ? strictCheckingFromQuery
+      : Boolean(criteria.strictChecking);
 
     // Extract the document
     const document = userProfile.documents?.[criteria.documentType];
 
-    // If document is missing
-    if (document === undefined || document === null) {
+    // If document is missing or empty
+    if (document === undefined || document === null || document === '') {
       if (strictChecking) {
         reasons.push({
           type: "userDocument",
