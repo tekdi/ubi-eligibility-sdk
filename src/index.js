@@ -86,9 +86,8 @@ fastify.post(
         type: "object",
         properties: {
           strictChecking: {
-            type: "string",
-            enum: ["true", "false"],
-            default: "false",
+            type: "boolean",
+            default: false,
             description: "Enable strict eligibility checking",
           },
         },
@@ -97,7 +96,7 @@ fastify.post(
     },
   },
   (request, reply) => {
-    const strictChecking = request.query.strictChecking === "true";
+    const strictChecking = Boolean(request.query.strictChecking);
     const { userProfile, benefitsList } = request.body;
 
     return eligibilityService.checkBenefitsEligibility(
@@ -118,10 +117,23 @@ fastify.post(
 fastify.post(
   "/check-users-eligibility",
   {
-    schema: userEligibilitySchema,
+    schema: {
+      ...userEligibilitySchema,
+      querystring: { 
+        type: "object",
+        properties: {
+          strictChecking: {
+            type: "boolean",
+            default: false,
+            description: "Enable strict eligibility checking",
+          },
+        },
+        additionalProperties: false, 
+      },
+    },
   },
   (request, reply) => {
-    const strictChecking = request.query.strictChecking === "true";
+    const strictChecking = Boolean(request.query.strictChecking);
     const { userProfiles, benefitSchema } = request.body;
 
     // Check if eligibility criteria is an array

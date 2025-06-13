@@ -155,6 +155,8 @@ function checkBenefitEligibility(
   eligibilityEvaluationLogic,
   strictChecking
 ) {
+  // Ensure strictChecking is a boolean
+  const isStrictChecking = Boolean(strictChecking);
   // Check if benefit is defined and is an array
   if (!benefit || !Array.isArray(benefit)) { 
     return Promise.resolve({
@@ -196,7 +198,7 @@ function checkBenefitEligibility(
       ruleReasons = await ruleInstance.execute( 
         userProfile,
         criteria,
-        strictChecking
+        isStrictChecking
       );
 
       // If ruleReasons are present, it means the rule did not pass
