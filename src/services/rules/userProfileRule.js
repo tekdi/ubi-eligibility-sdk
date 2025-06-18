@@ -103,7 +103,7 @@ const RuleInterface = require("../interfaces/RuleInterface");
 class UserProfileRule extends RuleInterface {
   execute(userProfile, criteria, strictCheckingFromQuery) {
     const reasons = [];
-console.log(strictCheckingFromQuery,'=======')
+
     // Use strictChecking from query param if provided, else from criteria
     const strictChecking = typeof strictCheckingFromQuery === 'boolean' 
       ? strictCheckingFromQuery 
