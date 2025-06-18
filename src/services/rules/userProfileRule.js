@@ -105,14 +105,13 @@ class UserProfileRule extends RuleInterface {
     const reasons = [];
 
     // Use strictChecking from query param if provided, else from criteria
-    const strictChecking =
-      typeof strictCheckingFromQuery === "boolean"
-        ? strictCheckingFromQuery
-        : criteria.strictChecking;
+    const strictChecking = typeof strictCheckingFromQuery === 'boolean' 
+      ? strictCheckingFromQuery 
+      : Boolean(criteria.strictChecking);
 
     // Extract the value from userProfile based on criteria name
     const value = userProfile[criteria.name];
-    if (value === undefined || value === null) {
+    if (value === undefined || value === null || value === '') {
       if (strictChecking) {
         reasons.push({
           type: "userProfile",
