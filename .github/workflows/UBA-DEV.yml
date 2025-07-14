@@ -31,4 +31,4 @@ jobs:
         SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
       with:
         status: ${{ job.status }}
-        if: ${{ always() }}
+      if: ${{ always() }}
